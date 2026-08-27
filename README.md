@@ -1,66 +1,230 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# EmprendeLink
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Plataforma web orientada a facilitar la gestión y comercialización de productos ofrecidos por emprendedores, conectándolos con clientes interesados mediante un entorno organizado, accesible y confiable.
 
-## About Laravel
+Este proyecto se desarrolla para la asignatura **DWS901 - Desarrollo de Aplicaciones Web con Software Interpretado en el Servidor** de la Universidad Don Bosco.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Estado del proyecto
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+El proyecto se encuentra en la **Fase 1: Descubrimiento y Arquitectura del Sistema (Sprint I)**.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+En esta etapa se ha preparado la base técnica inicial:
 
-## Learning Laravel
+- Proyecto creado con Laravel 12.
+- Arquitectura inicial basada en el patrón MVC.
+- Repositorio Git configurado en GitHub.
+- Ramas `main` y `develop` establecidas.
+- Variables sensibles excluidas del control de versiones.
+- Compatibilidad verificada con PHP 8.5.
+- Pruebas iniciales ejecutadas correctamente.
+- Auditoría de dependencias sin vulnerabilidades conocidas.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+La lógica funcional completa, los módulos del sistema y la persistencia definitiva en MySQL se desarrollarán progresivamente en las siguientes fases.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Objetivo general
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Desarrollar una plataforma web que permita a los emprendedores administrar y publicar sus productos, mientras los clientes pueden consultar la oferta disponible y realizar pedidos mediante una experiencia clara y organizada.
 
-## Laravel Sponsors
+## Usuarios principales
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+- **Administrador:** supervisará usuarios, publicaciones, pedidos y funcionamiento general de la plataforma.
+- **Emprendedor:** gestionará su perfil, productos, inventario y pedidos recibidos.
+- **Cliente:** consultará productos, preparará pedidos y dará seguimiento a sus solicitudes.
 
-### Premium Partners
+## Tecnologías
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+| Componente               | Tecnología               |
+| ------------------------ | ------------------------ |
+| Lenguaje del servidor    | PHP 8.5                  |
+| Framework principal      | Laravel 12               |
+| Arquitectura             | MVC                      |
+| Motor de plantillas      | Blade                    |
+| Persistencia prevista    | MySQL                    |
+| Desarrollo local inicial | SQLite                   |
+| Frontend                 | HTML5, CSS3 y JavaScript |
+| Gestión de recursos      | Vite y npm               |
+| Pruebas                  | PHPUnit                  |
+| Control de versiones     | Git                      |
+| Repositorio remoto       | GitHub                   |
 
-## Contributing
+## Arquitectura inicial
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+EmprendeLink utilizará el patrón **Modelo-Vista-Controlador (MVC)** proporcionado por Laravel.
 
-## Code of Conduct
+```mermaid
+flowchart TD
+    A["Cliente web"] --> B["Rutas"]
+    B --> C["Controladores"]
+    C --> D["Modelos Eloquent"]
+    D --> E[("Base de datos")]
+    C --> F["Vistas Blade"]
+    F --> A
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- **Modelos:** representan las entidades y gestionan el acceso a los datos mediante Eloquent.
+- **Vistas:** presentan la interfaz al usuario mediante plantillas Blade.
+- **Controladores:** procesan solicitudes y coordinan la comunicación entre modelos y vistas.
+- **Rutas:** determinan qué controlador debe atender cada solicitud HTTP.
+- **Base de datos:** almacenará usuarios, productos, pedidos y demás información del sistema.
 
-## Security Vulnerabilities
+## Estructura principal
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+| Ruta           | Responsabilidad                                      |
+| -------------- | ---------------------------------------------------- |
+| `app/`         | Lógica principal, modelos, controladores y servicios |
+| `bootstrap/`   | Inicialización del framework                         |
+| `config/`      | Configuración de la aplicación                       |
+| `database/`    | Migraciones, fábricas y seeders                      |
+| `public/`      | Punto de entrada y recursos públicos                 |
+| `resources/`   | Vistas, estilos y archivos JavaScript                |
+| `routes/`      | Definición de rutas web y comandos                   |
+| `storage/`     | Archivos generados, sesiones, caché y registros      |
+| `tests/`       | Pruebas automatizadas                                |
+| `.env.example` | Plantilla de variables de entorno                    |
 
-## License
+## Requisitos
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Para ejecutar el proyecto localmente se necesita:
+
+- PHP 8.2 o superior.
+- Composer 2.x.
+- Node.js y npm.
+- Git.
+- SQLite para las pruebas iniciales o MySQL para la persistencia definitiva.
+
+## Instalación local
+
+### 1. Clonar el repositorio
+
+```bash
+git clone https://github.com/Notchez/dws-emprendelink.git
+cd dws-emprendelink
+```
+
+### 2. Instalar las dependencias de PHP
+
+```bash
+composer install
+```
+
+### 3. Crear el archivo de entorno
+
+En Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+En Linux:
+
+```bash
+cp .env.example .env
+```
+
+### 4. Generar la clave de la aplicación
+
+```bash
+php artisan key:generate
+```
+
+### 5. Preparar SQLite para el entorno inicial
+
+En Windows PowerShell:
+
+```powershell
+New-Item -ItemType File database/database.sqlite -Force
+php artisan migrate
+```
+
+En Linux:
+
+```bash
+touch database/database.sqlite
+php artisan migrate
+```
+
+La configuración será actualizada para utilizar MySQL cuando se implemente el modelo de datos definitivo del proyecto.
+
+### 6. Instalar los recursos del frontend
+
+```bash
+npm install
+npm run dev
+```
+
+### 7. Iniciar la aplicación
+
+En otra terminal:
+
+```bash
+php artisan serve
+```
+
+La aplicación estará disponible normalmente en:
+
+```text
+http://127.0.0.1:8000
+```
+
+## Pruebas y seguridad
+
+Ejecutar las pruebas automatizadas:
+
+```bash
+php artisan test
+```
+
+Comprobar las dependencias:
+
+```bash
+composer audit
+```
+
+Nunca deben subirse al repositorio:
+
+- El archivo `.env`.
+- Credenciales o claves privadas.
+- La carpeta `vendor`.
+- La carpeta `node_modules`.
+- Bases de datos SQLite locales.
+- Archivos temporales, registros o caché.
+
+## Estrategia Git
+
+El repositorio utiliza las siguientes ramas:
+
+- `main`: contiene únicamente versiones estables.
+- `develop`: integra el trabajo preparado para el siguiente incremento.
+- `feature/nombre-funcionalidad`: se utilizará para desarrollar funcionalidades específicas.
+
+Flujo de trabajo recomendado:
+
+1. Actualizar la rama `develop`.
+2. Crear una rama `feature` desde `develop`.
+3. Realizar y comprobar los cambios.
+4. Crear commits claros y específicos.
+5. Subir la rama a GitHub.
+6. Abrir un Pull Request hacia `develop`.
+7. Integrar `develop` en `main` cuando el incremento sea estable.
+
+## Convención de commits
+
+Los mensajes se redactarán en español y describirán claramente el cambio realizado.
+
+Ejemplos:
+
+```text
+Configuración: preparar entorno inicial de Laravel
+Funcionalidad: agregar catálogo público de productos
+Corrección: resolver validación del formulario de registro
+Documentación: actualizar instrucciones de instalación
+Pruebas: agregar pruebas del módulo de pedidos
+```
+
+## Repositorio
+
+[Notchez/dws-emprendelink](https://github.com/Notchez/dws-emprendelink)
+
+## Uso académico
+
+EmprendeLink es un proyecto académico desarrollado para DWS901. Actualmente no cuenta con una licencia pública de distribución.
