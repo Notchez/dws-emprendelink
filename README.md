@@ -209,17 +209,39 @@ Flujo de trabajo recomendado:
 
 ## Convención de commits
 
-Los mensajes se redactarán en español y describirán claramente el cambio realizado.
+El proyecto adopta la especificación **Conventional Commits** para mantener un historial claro, uniforme y fácil de interpretar.
 
-Ejemplos:
+Los mensajes utilizarán la siguiente estructura:
 
 ```text
-Configuración: preparar entorno inicial de Laravel
-Funcionalidad: agregar catálogo público de productos
-Corrección: resolver validación del formulario de registro
-Documentación: actualizar instrucciones de instalación
-Pruebas: agregar pruebas del módulo de pedidos
+tipo(alcance opcional): descripción breve
 ```
+
+Los identificadores del tipo y el alcance se escribirán en inglés, mientras que la descripción del cambio se redactará en español.
+
+### Tipos permitidos
+
+- `feat`: incorporación de una nueva funcionalidad.
+- `fix`: corrección de un error.
+- `docs`: cambios realizados únicamente en la documentación.
+- `test`: creación o modificación de pruebas.
+- `refactor`: reorganización del código sin modificar su comportamiento.
+- `ci`: cambios en GitHub Actions o en procesos de integración continua.
+- `chore`: configuración, dependencias y tareas de mantenimiento.
+- `style`: cambios de formato que no alteran la lógica del sistema.
+
+### Ejemplos
+
+```text
+feat(pedidos): agregar registro de pedidos
+fix(auth): corregir redirección después del inicio de sesión
+docs(readme): actualizar instrucciones de instalación
+test(pedidos): agregar pruebas para la creación de pedidos
+ci(actions): ejecutar pruebas automáticas de Laravel
+chore(gitignore): ignorar archivos temporales del servidor de lenguaje
+```
+
+Cada commit debe representar un cambio concreto. La descripción debe ser breve, comenzar en minúscula y no terminar con punto.
 
 ## Repositorio
 
