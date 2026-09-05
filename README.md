@@ -1,4 +1,4 @@
-## EmprendeLink
+# EmprendeLink
 
 Plataforma web orientada a facilitar la gestión y comercialización de productos ofrecidos por emprendedores, conectándolos con clientes interesados mediante un entorno organizado, accesible y confiable.
 
