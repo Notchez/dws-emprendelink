@@ -1,252 +1,234 @@
 # EmprendeLink
 
-Plataforma web orientada a facilitar la gestión y comercialización de productos ofrecidos por emprendedores, conectándolos con clientes interesados mediante un entorno organizado, accesible y confiable.
+Plataforma web para que microemprendedores administren su perfil comercial, publiquen un catálogo y gestionen pedidos. Los clientes pueden consultar el catálogo y registrar pedidos sin crear una cuenta.
 
-Este proyecto se desarrolla para la asignatura **DWS901 - Desarrollo de Aplicaciones Web con Software Interpretado en el Servidor** de la Universidad Don Bosco.
+Proyecto académico de DWS901 — Desarrollo de Aplicaciones Web con Software Interpretado en el Servidor, Universidad Don Bosco.
 
-## Estado del proyecto
+## Fase actual
 
-El proyecto se encuentra en la **Fase 1: Descubrimiento y Arquitectura del Sistema (Sprint I)**.
+Fase 2 — Desarrollo Back-End y Persistencia (Sprint II).
 
-En esta etapa se ha preparado la base técnica inicial:
+El trabajo de esta fase consiste en implementar:
 
-- Proyecto creado con Laravel 12.
-- Arquitectura inicial basada en el patrón MVC.
-- Repositorio Git configurado en GitHub.
-- Ramas `main` y `develop` establecidas.
-- Variables sensibles excluidas del control de versiones.
-- Compatibilidad verificada con PHP 8.5.
-- Pruebas iniciales ejecutadas correctamente.
-- Auditoría de dependencias sin vulnerabilidades conocidas.
+- Arquitectura organizada y configuración reproducible.
+- Base de datos MySQL.
+- Registro, autenticación y autorización.
+- Operaciones de los módulos prioritarios.
+- Reglas de negocio del Documento Maestro.
+- Pruebas y evidencia para la defensa.
 
-La lógica funcional completa, los módulos del sistema y la persistencia definitiva en MySQL se desarrollarán progresivamente en las siguientes fases.
+La estructura compartida y los nombres de clases se documentan en `docs/ARQUITECTURA_FASE_2.md`.
 
-## Objetivo general
+La distribución del trabajo se encuentra en `docs/RESPONSABILIDADES_FASE_2.md`.
 
-Desarrollar una plataforma web que permita a los emprendedores administrar y publicar sus productos, mientras los clientes pueden consultar la oferta disponible y realizar pedidos mediante una experiencia clara y organizada.
+## Estado del esqueleto
 
-## Usuarios principales
+La base preparada contiene clases iniciales para organizar el trabajo del equipo.
 
-- **Administrador:** supervisará usuarios, publicaciones, pedidos y funcionamiento general de la plataforma.
-- **Emprendedor:** gestionará su perfil, productos, inventario y pedidos recibidos.
-- **Cliente:** consultará productos, preparará pedidos y dará seguimiento a sus solicitudes.
+Una clase vacía o una pantalla de preparación no representa una funcionalidad terminada. Cada integrante debe implementar y probar la lógica de su módulo.
+
+AdminLTE 4 será la plantilla visual común, integrada con Blade y Vite. La paleta y la tipografía se toman del Documento Maestro, página 44.
 
 ## Tecnologías
 
-| Componente               | Tecnología               |
-| ------------------------ | ------------------------ |
-| Lenguaje del servidor    | PHP 8.5                  |
-| Framework principal      | Laravel 12               |
-| Arquitectura             | MVC                      |
-| Motor de plantillas      | Blade                    |
-| Persistencia prevista    | MySQL                    |
-| Desarrollo local inicial | SQLite                   |
-| Frontend                 | HTML5, CSS3 y JavaScript |
-| Gestión de recursos      | Vite y npm               |
-| Pruebas                  | PHPUnit                  |
-| Control de versiones     | Git                      |
-| Repositorio remoto       | GitHub                   |
+| Área                  | Tecnología               |
+| --------------------- | ------------------------ |
+| Lenguaje del servidor | PHP 8.5                  |
+| Framework             | Laravel 12               |
+| Arquitectura          | MVC con servicios        |
+| Base de datos         | MySQL 8                  |
+| Plantillas            | Blade                    |
+| Interfaz              | AdminLTE 4 y Bootstrap 5 |
+| Iconos                | Bootstrap Icons          |
+| Tipografía            | Inter                    |
+| Recursos frontend     | Vite y npm               |
+| Dependencias PHP      | Composer                 |
+| Pruebas               | PHPUnit                  |
+| Control de versiones  | Git y GitHub             |
 
-## Arquitectura inicial
+Las versiones instaladas se conservan en `composer.lock` y `package-lock.json`.
 
-EmprendeLink utilizará el patrón **Modelo-Vista-Controlador (MVC)** proporcionado por Laravel.
+## Requisitos del entorno
 
-```mermaid
-flowchart TD
-    A["Cliente web"] --> B["Rutas"]
-    B --> C["Controladores"]
-    C --> D["Modelos Eloquent"]
-    D --> E[("Base de datos")]
-    C --> F["Vistas Blade"]
-    F --> A
-```
-
-- **Modelos:** representan las entidades y gestionan el acceso a los datos mediante Eloquent.
-- **Vistas:** presentan la interfaz al usuario mediante plantillas Blade.
-- **Controladores:** procesan solicitudes y coordinan la comunicación entre modelos y vistas.
-- **Rutas:** determinan qué controlador debe atender cada solicitud HTTP.
-- **Base de datos:** almacenará usuarios, productos, pedidos y demás información del sistema.
-
-## Estructura principal
-
-| Ruta           | Responsabilidad                                      |
-| -------------- | ---------------------------------------------------- |
-| `app/`         | Lógica principal, modelos, controladores y servicios |
-| `bootstrap/`   | Inicialización del framework                         |
-| `config/`      | Configuración de la aplicación                       |
-| `database/`    | Migraciones, fábricas y seeders                      |
-| `public/`      | Punto de entrada y recursos públicos                 |
-| `resources/`   | Vistas, estilos y archivos JavaScript                |
-| `routes/`      | Definición de rutas web y comandos                   |
-| `storage/`     | Archivos generados, sesiones, caché y registros      |
-| `tests/`       | Pruebas automatizadas                                |
-| `.env.example` | Plantilla de variables de entorno                    |
-
-## Requisitos
-
-Para ejecutar el proyecto localmente se necesita:
-
-- PHP 8.2 o superior.
+- PHP compatible con `composer.json`; versión objetivo del proyecto: PHP 8.5.
+- Extensiones PHP necesarias para Laravel y MySQL, incluyendo PDO MySQL, Mbstring, OpenSSL, XML, Ctype, Fileinfo y Tokenizer.
 - Composer 2.x.
-- Node.js y npm.
+- MySQL 8.
+- Node.js y npm compatibles con las dependencias del proyecto.
 - Git.
-- SQLite para las pruebas iniciales o MySQL para la persistencia definitiva.
 
-## Instalación local
+## Instalación y ejecución local
 
-### 1. Clonar el repositorio
+Consulta la [guía de instalación local](docs/INSTALACION_LOCAL.md).
 
-```bash
-git clone https://github.com/Notchez/dws-emprendelink.git
-cd dws-emprendelink
-```
+Incluye las herramientas necesarias, instalación de dependencias,
+configuración de MySQL y pasos para ejecutar Laravel y AdminLTE.
 
-### 2. Instalar las dependencias de PHP
+### Compilación del frontend
 
 ```bash
-composer install
+npm run build
 ```
 
-### 3. Crear el archivo de entorno
+## Comandos de verificación
 
-En Windows PowerShell:
-
-```powershell
-Copy-Item .env.example .env
-```
-
-En Linux:
-
-```bash
-cp .env.example .env
-```
-
-### 4. Generar la clave de la aplicación
-
-```bash
-php artisan key:generate
-```
-
-### 5. Preparar SQLite para el entorno inicial
-
-En Windows PowerShell:
-
-```powershell
-New-Item -ItemType File database/database.sqlite -Force
-php artisan migrate
-```
-
-En Linux:
-
-```bash
-touch database/database.sqlite
-php artisan migrate
-```
-
-La configuración será actualizada para utilizar MySQL cuando se implemente el modelo de datos definitivo del proyecto.
-
-### 6. Instalar los recursos del frontend
-
-```bash
-npm install
-npm run dev
-```
-
-### 7. Iniciar la aplicación
-
-En otra terminal:
-
-```bash
-php artisan serve
-```
-
-La aplicación estará disponible normalmente en:
-
-```text
-http://127.0.0.1:8000
-```
-
-## Pruebas y seguridad
-
-Ejecutar las pruebas automatizadas:
+Ejecutar las pruebas:
 
 ```bash
 php artisan test
 ```
 
-Comprobar las dependencias:
+Consultar rutas:
+
+```bash
+php artisan route:list
+```
+
+Consultar migraciones:
+
+```bash
+php artisan migrate:status
+```
+
+Revisar dependencias PHP:
 
 ```bash
 composer audit
 ```
 
-Nunca deben subirse al repositorio:
+Compilar recursos:
 
-- El archivo `.env`.
-- Credenciales o claves privadas.
-- La carpeta `vendor`.
-- La carpeta `node_modules`.
-- Bases de datos SQLite locales.
-- Archivos temporales, registros o caché.
+```bash
+npm run build
+```
 
-## Estrategia Git
+## Organización del proyecto
 
-El repositorio utiliza las siguientes ramas:
+| Ubicación                    | Responsabilidad                            |
+| ---------------------------- | ------------------------------------------ |
+| `app/Http/Controllers`       | Recibir solicitudes y coordinar respuestas |
+| `app/Http/Requests`          | Validar y autorizar entradas               |
+| `app/Http/Middleware`        | Controles compartidos sobre solicitudes    |
+| `app/Models`                 | Entidades, relaciones y acceso a datos     |
+| `app/Policies`               | Autorización sobre recursos                |
+| `app/Services`               | Reglas y operaciones de negocio            |
+| `app/Exceptions`             | Errores previstos del dominio              |
+| `database/migrations`        | Esquema reproducible                       |
+| `database/factories`         | Generación de datos de prueba              |
+| `database/seeders`           | Datos iniciales y demostración             |
+| `resources/views`            | Vistas Blade                               |
+| `resources/css/adminlte.css` | Tema y colores de EmprendeLink             |
+| `resources/js/adminlte.js`   | Recursos JavaScript compartidos            |
+| `routes`                     | Rutas organizadas por módulo               |
+| `tests/Feature`              | Pruebas de solicitudes e integración       |
+| `tests/Unit`                 | Pruebas de reglas aisladas                 |
+| `docs`                       | Documentación técnica y del equipo         |
 
-- `main`: contiene únicamente versiones estables.
-- `develop`: integra el trabajo preparado para el siguiente incremento.
-- `feature/nombre-funcionalidad`: se utilizará para desarrollar funcionalidades específicas.
+## Diseño visual
 
-Flujo de trabajo recomendado:
+Referencia: Documento Maestro, páginas 44 a 61.
 
-1. Actualizar la rama `develop`.
-2. Crear una rama `feature` desde `develop`.
-3. Realizar y comprobar los cambios.
-4. Crear commits claros y específicos.
-5. Subir la rama a GitHub.
-6. Abrir un Pull Request hacia `develop`.
-7. Integrar `develop` en `main` cuando el incremento sea estable.
+| Uso              | Color     |
+| ---------------- | --------- |
+| Primario         | `#2563EB` |
+| Primario claro   | `#EFF6FF` |
+| Texto principal  | `#111827` |
+| Texto secundario | `#6B7280` |
+| Bordes           | `#D1D5DB` |
+| Fondo            | `#F8FAFC` |
+| Superficies      | `#FFFFFF` |
+
+Tipografía: Inter.
+
+Los estilos compartidos deben centralizarse. Los módulos reutilizan el layout y los componentes existentes.
+
+## Guía para LLM y asistentes de código
+
+Antes de generar o editar código, el asistente debe leer:
+
+1. `AGENTS.md`.
+2. `docs/LLM_GUIDE.md`.
+3. `docs/ARQUITECTURA_FASE_2.md`.
+4. `docs/RESPONSABILIDADES_FASE_2.md`.
+5. `docs/DECISIONES_TECNICAS.md`.
+
+El integrante debe indicar:
+
+- Su número y módulo asignado.
+- Los RF, RNF o criterios de aceptación que implementará.
+- La rama de trabajo.
+- Los archivos relacionados.
+- Las decisiones pendientes que afecten su tarea.
+
+### Prompt inicial sugerido
+
+> Lee primero AGENTS.md, docs/LLM_GUIDE.md, docs/ARQUITECTURA_FASE_2.md, docs/RESPONSABILIDADES_FASE_2.md y docs/DECISIONES_TECNICAS.md. Soy el integrante [número] y trabajaré en [módulo y requerimientos]. Inspecciona el código existente antes de modificarlo. Respeta los nombres, las rutas, las tablas y los contratos compartidos. Si falta una regla de negocio, identifícala y no la inventes. Implementa mi módulo y sus pruebas relevantes. Al terminar, explica los archivos modificados, los requerimientos cubiertos, los comandos ejecutados, sus resultados y los pendientes. No publiques ni integres cambios sin mi autorización.
+
+## Flujo Git
+
+- `main`: versión estable de entrega.
+- `develop`: integración del equipo.
+- Ramas temporales: trabajo de cada integrante.
+
+Prefijos permitidos:
+
+- `feature/*`
+- `fix/*`
+- `docs/*`
+- `test/*`
+- `ci/*`
+- `chore/*`
+
+Flujo:
+
+1. Actualizar `develop`.
+2. Crear la rama de trabajo.
+3. Implementar y probar el cambio.
+4. Registrar commits descriptivos.
+5. Publicar la rama.
+6. Abrir Pull Request hacia `develop`.
+7. Comprobar los resultados de CI antes de integrar.
+
+Las funcionalidades se integran en `main` cuando el incremento esté listo para entrega.
 
 ## Convención de commits
 
-El proyecto adopta la especificación **Conventional Commits** para mantener un historial claro, uniforme y fácil de interpretar.
+Usar Conventional Commits con descripción en español.
 
-Los mensajes utilizarán la siguiente estructura:
-
-```text
-tipo(alcance opcional): descripción breve
-```
-
-Los identificadores del tipo y el alcance se escribirán en inglés, mientras que la descripción del cambio se redactará en español.
-
-### Tipos permitidos
-
-- `feat`: incorporación de una nueva funcionalidad.
-- `fix`: corrección de un error.
-- `docs`: cambios realizados únicamente en la documentación.
-- `test`: creación o modificación de pruebas.
-- `refactor`: reorganización del código sin modificar su comportamiento.
-- `ci`: cambios en GitHub Actions o en procesos de integración continua.
-- `chore`: configuración, dependencias y tareas de mantenimiento.
-- `style`: cambios de formato que no alteran la lógica del sistema.
-
-### Ejemplos
+Ejemplos:
 
 ```text
-feat(pedidos): agregar registro de pedidos
-fix(auth): corregir redirección después del inicio de sesión
-docs(readme): actualizar instrucciones de instalación
-test(pedidos): agregar pruebas para la creación de pedidos
-ci(actions): ejecutar pruebas automáticas de Laravel
-chore(gitignore): ignorar archivos temporales del servidor de lenguaje
+feat(productos): validar límite del plan
+fix(auth): bloquear el acceso de cuentas suspendidas
+test(pedidos): comprobar rollback del registro
+docs(readme): actualizar instalación con MySQL
+ci(actions): ejecutar pruebas del proyecto
 ```
 
-Cada commit debe representar un cambio concreto. La descripción debe ser breve, comenzar en minúscula y no terminar con punto.
+## Seguridad
 
-## Repositorio
+- No subir `.env`, credenciales ni tokens.
+- No utilizar datos personales reales en seeders o respaldos de demostración.
+- Proteger rutas privadas con autenticación y autorización.
+- Restringir consultas y modificaciones al emprendimiento autorizado.
+- Validar datos en el servidor.
+- Mantener CSRF en formularios.
+- No exponer trazas ni información sensible en mensajes para usuarios.
 
-[Notchez/dws-emprendelink](https://github.com/Notchez/dws-emprendelink)
+## Alcance
 
-## Uso académico
+La Fase 2 prioriza back-end, persistencia, autenticación, autorización y reglas de negocio.
 
-EmprendeLink es un proyecto académico desarrollado para DWS901. Actualmente no cuenta con una licencia pública de distribución.
+La incorporación de AdminLTE es el adelanto visual acordado.
+
+Los gráficos, reportes, exportaciones y estados de cuenta se desarrollarán conforme a la priorización del Product Backlog. Su aparición en un mockup no implica que deban quedar completos en este sprint.
+
+Se mantienen las exclusiones del Documento Maestro, incluyendo pagos en línea, facturación fiscal, chat, aplicación móvil nativa y marketplace general.
+
+## Documentación del equipo
+
+- `AGENTS.md`: reglas para asistentes.
+- `docs/LLM_GUIDE.md`: contexto y protocolo para LLM.
+- `docs/ARQUITECTURA_FASE_2.md`: estructura y nombres compartidos.
+- `docs/RESPONSABILIDADES_FASE_2.md`: responsabilidades y rúbrica.
+- `docs/DECISIONES_TECNICAS.md`: decisiones y asuntos pendientes.

@@ -1,0 +1,137 @@
+@import 'admin-lte/dist/css/adminlte.css';
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+@import 'overlayscrollbars/styles/overlayscrollbars.css';
+@import '@fontsource-variable/inter';
+
+/* Paleta y tipografía del Documento Maestro, página 44. */
+:root,
+[data-bs-theme='light'] {
+    --el-primary: #2563eb;
+    --el-primary-light: #eff6ff;
+    --el-text: #111827;
+    --el-text-secondary: #6b7280;
+    --el-border: #d1d5db;
+    --el-background: #f8fafc;
+    --el-surface: #ffffff;
+
+    --bs-primary: var(--el-primary);
+    --bs-primary-rgb: 37, 99, 235;
+    --bs-body-font-family: 'Inter Variable', sans-serif;
+    --bs-body-font-size: 0.875rem;
+    --bs-body-bg: var(--el-background);
+    --bs-body-color: var(--el-text);
+    --bs-secondary-color: var(--el-text-secondary);
+    --bs-border-color: var(--el-border);
+    --bs-link-color: var(--el-primary);
+    --bs-link-color-rgb: 37, 99, 235;
+    --bs-link-hover-color: #1d4ed8;
+    --bs-link-hover-color-rgb: 29, 78, 216;
+}
+
+h1,
+.h1 {
+    font-size: 2rem;
+}
+
+h2,
+.h2 {
+    font-size: 1.5rem;
+}
+
+h3,
+.h3 {
+    font-size: 1.125rem;
+}
+
+small,
+.small {
+    font-size: 0.75rem;
+}
+
+.btn,
+.form-control,
+.form-select {
+    font-size: 0.875rem;
+}
+
+.form-control,
+.form-select {
+    background-color: var(--el-surface);
+}
+
+.app-main {
+    background: var(--el-background);
+}
+
+.app-header,
+.app-sidebar,
+.app-footer,
+.card {
+    background-color: var(--el-surface);
+}
+
+.app-sidebar {
+    --lte-sidebar-color: var(--el-text);
+    --lte-sidebar-hover-color: var(--el-primary);
+    --lte-sidebar-hover-bg: var(--el-primary-light);
+    --lte-sidebar-active-color: var(--el-primary);
+    --lte-sidebar-menu-active-color: var(--el-primary);
+    --lte-sidebar-menu-active-bg: var(--el-primary-light);
+
+    border-right: 1px solid var(--el-border);
+}
+
+.sidebar-brand {
+    border-bottom: 1px solid var(--el-border);
+}
+
+.sidebar-menu .nav-link {
+    border-radius: 0.5rem;
+    color: var(--el-text);
+}
+
+.sidebar-menu .nav-link.active {
+    background-color: var(--el-primary-light);
+    color: var(--el-primary);
+}
+
+.sidebar-wrapper .sidebar-menu>.nav-item>.nav-link[aria-disabled='true'] {
+    color: var(--el-text-secondary);
+    background-color: transparent;
+    cursor: default;
+}
+
+.btn-primary {
+    --bs-btn-color: #ffffff;
+    --bs-btn-bg: var(--el-primary);
+    --bs-btn-border-color: var(--el-primary);
+    --bs-btn-hover-bg: #1d4ed8;
+    --bs-btn-hover-border-color: #1d4ed8;
+    --bs-btn-active-bg: #1e40af;
+    --bs-btn-active-border-color: #1e40af;
+    --bs-btn-disabled-bg: var(--el-primary);
+    --bs-btn-disabled-border-color: var(--el-primary);
+    --bs-btn-focus-shadow-rgb: 37, 99, 235;
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--el-primary);
+    --bs-btn-border-color: var(--el-primary);
+    --bs-btn-hover-bg: var(--el-primary);
+    --bs-btn-hover-border-color: var(--el-primary);
+    --bs-btn-active-bg: var(--el-primary);
+    --bs-btn-active-border-color: var(--el-primary);
+    --bs-btn-disabled-color: var(--el-primary);
+    --bs-btn-disabled-border-color: var(--el-primary);
+    --bs-btn-focus-shadow-rgb: 37, 99, 235;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--el-primary);
+    box-shadow: 0 0 0 0.25rem rgb(37 99 235 / 15%);
+}
+
+.surface-soft {
+    background-color: var(--el-primary-light);
+}
