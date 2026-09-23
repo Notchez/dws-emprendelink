@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   pruebas:
-    name: Validar Laravel y frontend
+    name: Pruebas automáticas
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
