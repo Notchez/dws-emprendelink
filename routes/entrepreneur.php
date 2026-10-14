@@ -18,15 +18,32 @@
 */
 
 use App\Http\Controllers\Emprendedor\BusinessController;
+use App\Http\Controllers\Emprendedor\CategoryController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth')
     ->prefix('emprendedor')
     ->name('entrepreneur.')
     ->group(function () {
+
+        // Perfil del emprendimiento
         Route::get('/negocio', [BusinessController::class, 'show'])
             ->name('business.show');
 
         Route::put('/negocio/{emprendimiento}', [BusinessController::class, 'update'])
             ->name('business.update');
+
+        // Administración de categorías
+        Route::get('/categorias', [CategoryController::class, 'index'])
+            ->name('categories.index');
+
+        Route::post('/categorias', [CategoryController::class, 'store'])
+            ->name('categories.store');
+
+        Route::put('/categorias/{categoria}', [CategoryController::class, 'update'])
+            ->name('categories.update');
+
+        Route::delete('/categorias/{categoria}', [CategoryController::class, 'destroy'])
+            ->name('categories.destroy');
+
     });
