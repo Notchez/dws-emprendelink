@@ -2,28 +2,35 @@
 
 namespace App\Http\Requests\Emprendedor;
 
-use Illuminate\Contracts\Validation\ValidationRule;
+use App\Models\Categoria;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateCategoryRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        $usuario = $this->user();
+        $categoria = $this->route('categoria');
+
+        if ($usuario === null || !($categoria instanceof Categoria)) {
+            return false;
+        }
+
+        $emprendimiento = $usuario->emprendimiento;
+
+        if ($emprendimiento === null) {
+            return false;
+        }
+
+        return $usuario->can('update', $emprendimiento)
+            && $categoria->emprendimiento_id == $emprendimiento->id;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+            'nombre' => ['required', 'string', 'max:100'],
+            'descripcion' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

@@ -21,7 +21,7 @@ class EmprendimientoPolicy
      */
     public function view(User $user, Emprendimiento $emprendimiento): bool
     {
-        return false;
+        return $emprendimiento->usuario_id === $user->id;
     }
 
     /**
@@ -36,9 +36,9 @@ class EmprendimientoPolicy
      * Determine whether the user can update the model.
      */
     public function update(User $user, Emprendimiento $emprendimiento): bool
-    {
-        return false;
-    }
+{
+    return $emprendimiento->usuario_id === $user->id;
+}
 
     /**
      * Determine whether the user can delete the model.

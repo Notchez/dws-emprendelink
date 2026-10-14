@@ -2,28 +2,26 @@
 
 namespace App\Http\Requests\Emprendedor;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreCategoryRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        $usuario = $this->user();
+
+        if ($usuario === null || $usuario->emprendimiento === null) {
+            return false;
+        }
+
+        return $usuario->can('update', $usuario->emprendimiento);
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+            'nombre' => ['required', 'string', 'max:100'],
+            'descripcion' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

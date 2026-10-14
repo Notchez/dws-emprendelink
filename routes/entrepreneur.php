@@ -16,3 +16,17 @@
 | del middleware de roles y de las Policies correspondientes.
 |
 */
+
+use App\Http\Controllers\Emprendedor\BusinessController;
+use Illuminate\Support\Facades\Route;
+
+Route::middleware('auth')
+    ->prefix('emprendedor')
+    ->name('entrepreneur.')
+    ->group(function () {
+        Route::get('/negocio', [BusinessController::class, 'show'])
+            ->name('business.show');
+
+        Route::put('/negocio/{emprendimiento}', [BusinessController::class, 'update'])
+            ->name('business.update');
+    });
