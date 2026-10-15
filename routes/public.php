@@ -11,3 +11,9 @@ use Illuminate\Support\Facades\Route;
 
 // Vista inicial estática, sin datos privados ni operaciones de negocio.
 Route::view('/', 'home')->name('home');
+
+Route::get('/catalogo/{slug}', [\App\Http\Controllers\CatalogController::class, 'index'])
+    ->name('catalog.index');
+
+Route::get('/catalogo/{slug}/producto/{producto}', [\App\Http\Controllers\CatalogController::class, 'show'])
+    ->name('catalog.show');

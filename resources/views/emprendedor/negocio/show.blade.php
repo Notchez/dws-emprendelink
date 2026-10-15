@@ -107,4 +107,40 @@
             </form>
         </div>
     </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h2 class="card-title">Catálogo público</h2>
+        </div>
+
+        <div class="card-body">
+            <p>
+                Comparte este enlace con tus clientes para que
+                puedan consultar los productos de tu emprendimiento.
+            </p>
+
+            @if ($emprendimiento->slug)
+                <label class="form-label">
+                    Enlace de tu catálogo
+                </label>
+
+                <input type="text"
+                       class="form-control mb-3"
+                       value="{{ route('catalog.index', $emprendimiento->slug) }}"
+                       readonly
+                       onclick="this.select()">
+
+                <a href="{{ route('catalog.index', $emprendimiento->slug) }}"
+                   class="btn btn-success"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                    Ver mi catálogo público
+                </a>
+            @else
+                <div class="alert alert-warning">
+                    Tu emprendimiento todavía no tiene un enlace público configurado.
+                </div>
+            @endif
+        </div>
+    </div>
 @endsection
