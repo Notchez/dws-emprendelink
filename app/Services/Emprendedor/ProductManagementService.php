@@ -6,6 +6,7 @@ use App\Models\Emprendimiento;
 use Illuminate\Database\Eloquent\Collection;
 use App\Models\Producto;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Http\UploadedFile;
 

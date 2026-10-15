@@ -107,6 +107,52 @@
             </form>
         </div>
     </div>
+    
+    <div class="card mt-4">
+        <div class="card-header">
+            <h2 class="card-title">Mi plan de suscripción</h2>
+        </div>
+
+        <div class="card-body">
+            @if ($plan)
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <strong>Plan contratado</strong>
+                        <p>{{ $plan->nombre }}</p>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <strong>Productos activos</strong>
+                        <p>{{ $productosActivos }}</p>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <strong>Límite de productos</strong>
+                        <p>{{ $limiteProductos }}</p>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    Puedes activar
+                    <strong>{{ $productosDisponibles }}</strong>
+                    producto(s) adicionales con tu plan actual.
+                </div>
+
+                @if ($productosDisponibles === 0)
+                    <div class="alert alert-warning">
+                        Has alcanzado el límite de productos activos
+                        permitido por tu plan.
+                    </div>
+                @endif
+            @else
+                <div class="alert alert-warning mb-0">
+                    Tu emprendimiento no tiene una suscripción
+                    activa y vigente. No podrás activar productos
+                    hasta contar con un plan válido.
+                </div>
+            @endif
+        </div>
+    </div>
 
     <div class="card mt-4">
         <div class="card-header">

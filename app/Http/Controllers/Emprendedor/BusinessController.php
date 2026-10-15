@@ -23,7 +23,36 @@ class BusinessController extends Controller
 
         Gate::authorize('view', $emprendimiento);
 
-        return view('emprendedor.negocio.show', compact('emprendimiento'));
+        $suscripcion = $emprendimiento->suscripciones()
+    ->where('estado', 'activa')
+    ->whereDate('fecha_inicio', '<=', today())
+    ->where(function ($consulta) {
+        $consulta->whereNull('fecha_fin')
+            ->orWhereDate('fecha_fin', '>=', today());
+    })
+    ->with('plan')
+    ->orderByDesc('fecha_inicio')
+    ->first();
+
+$plan = $suscripcion?->plan;
+
+$productosActivos = $emprendimiento->productos()
+    ->where('estado', true)
+    ->count();
+
+$limiteProductos = $plan?->limite_productos;
+
+$productosDisponibles = $limiteProductos !== null
+    ? max(0, $limiteProductos - $productosActivos)
+    : 0;
+
+return view('emprendedor.negocio.show', compact(
+    'emprendimiento',
+    'plan',
+    'productosActivos',
+    'limiteProductos',
+    'productosDisponibles'
+));
     }
 
     public function update(
