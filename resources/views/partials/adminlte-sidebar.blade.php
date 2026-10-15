@@ -40,15 +40,25 @@
                     </a>
                 </li>
 
-                <!-- Comisiones -->
-                <li class="nav-item">
-                    <a href="{{ route('admin.comisiones.index') }}"
-                       @class(['nav-link', 'active' => request()->routeIs('admin.comisiones.*')])
-                       @if(request()->routeIs('admin.comisiones.*')) aria-current="page" @endif>
-                        <i class="nav-icon bi bi-percent" aria-hidden="true"></i>
-                        <p>Comisiones</p>
-                    </a>
-                </li>
+                <!-- Comisiones / Reportes -->
+<li class="nav-item">
+    <a href="{{ route('admin.comisiones.index') }}"
+       @class(['nav-link', 'active' => request()->routeIs('admin.comisiones.*') || request()->routeIs('admin.reportes.*')])
+       @if(request()->routeIs('admin.comisiones.*') || request()->routeIs('admin.reportes.*')) aria-current="page" @endif>
+        <i class="nav-icon bi bi-percent" aria-hidden="true"></i>
+        <p>Comisiones / Reportes</p>
+    </a>
+</li>
+
+<!-- Usuarios -->
+<li class="nav-item">
+    <a href="{{ route('admin.users.index') }}"
+       @class(['nav-link', 'active' => request()->routeIs('admin.users.*')])
+       @if(request()->routeIs('admin.users.*')) aria-current="page" @endif>
+        <i class="nav-icon bi bi-people" aria-hidden="true"></i>
+        <p>Usuarios</p>
+    </a>
+</li>
 
                 <!-- Pagos -->
                 <li class="nav-item">
@@ -60,15 +70,15 @@
                     </a>
                 </li>
 
-                <!-- Reportes -->
-                <li class="nav-item">
-                    <a href="{{ route('admin.reportes.index') }}"
-                       @class(['nav-link', 'active' => request()->routeIs('admin.reportes.*')])
-                       @if(request()->routeIs('admin.reportes.*')) aria-current="page" @endif>
-                        <i class="nav-icon bi bi-graph-up-arrow" aria-hidden="true"></i>
-                        <p>Reportes</p>
-                    </a>
-                </li>
+                <!-- Usuarios -->
+<li class="nav-item">
+    <a href="{{ route('admin.users.index') }}"
+       @class(['nav-link', 'active' => request()->routeIs('admin.users.*')])
+       @if(request()->routeIs('admin.users.*')) aria-current="page" @endif>
+        <i class="nav-icon bi bi-people" aria-hidden="true"></i>
+        <p>Usuarios</p>
+    </a>
+</li>
 
                 <!-- Configuración -->
                 <li class="nav-item">

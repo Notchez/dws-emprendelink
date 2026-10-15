@@ -23,9 +23,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/planes/{id}/edit', [PlanController::class, 'edit'])->name('planes.edit');
     Route::put('/planes/{id}', [PlanController::class, 'update'])->name('planes.update');
 
-    // --- MÓDULO 3: Comisiones y Reportes ---
+    // --- MÓDULO 3: Comisiones, Reportes y Pagos ---
     Route::get('/comisiones', [CommissionController::class, 'index'])->name('comisiones.index');
     Route::get('/reportes', [CommissionController::class, 'index'])->name('reportes.index');
+    Route::get('/pagos', [CommissionController::class, 'index'])->name('pagos.index');
+
+    // --- GESTIÓN DE USUARIOS ---
+    Route::get('/usuarios', [UserController::class, 'index'])->name('users.index');
+    Route::get('/usuarios/{id}', [UserController::class, 'show'])->name('users.show');
 
     // --- PAGOS Y CONFIGURACIÓN ---
     Route::get('/pagos', [CommissionController::class, 'index'])->name('pagos.index');
