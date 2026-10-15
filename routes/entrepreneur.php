@@ -20,6 +20,7 @@
 use App\Http\Controllers\Emprendedor\BusinessController;
 use App\Http\Controllers\Emprendedor\CategoryController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Emprendedor\ProductController;
 
 Route::middleware('auth')
     ->prefix('emprendedor')
@@ -45,5 +46,22 @@ Route::middleware('auth')
 
         Route::delete('/categorias/{categoria}', [CategoryController::class, 'destroy'])
             ->name('categories.destroy');
+
+            
+        Route::get('/productos', [ProductController::class, 'index'])
+            ->name('products.index');
+
+        Route::post('/productos', [ProductController::class, 'store'])
+            ->name('products.store');
+
+         Route::put('/productos/{producto}', [ProductController::class, 'update'])
+            ->name('products.update');
+
+        Route::delete('/productos/{producto}', [ProductController::class, 'destroy'])
+            ->name('products.destroy');
+
+        Route::patch('/productos/{producto}/estado', [ProductController::class, 'cambiarEstado'])
+            ->name('products.toggle-status');
+
 
     });
