@@ -1,32 +1,31 @@
 <?php
-
 namespace App\Http\Controllers\Admin;
-
+use App\Enums\CommissionStatus;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Emprendimiento;
+use App\Http\Requests\Admin\UpdateCommissionStatusRequest;
 use App\Models\Comision;
-use App\Models\Pedido;
-
+use App\Services\Commissions\CommissionStatusService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 class CommissionController extends Controller
 {
-    public function index(Request $request)
+    public function __construct(private CommissionStatusService $statuses) {}
+
+    public function index(): View
     {
-        // Métricas globales basadas en tus tablas reales
-        $totalVentas = Pedido::sum('subtotal');
-        $totalComisiones = Comision::sum('total_comision');
-        $comisionesPendientes = Comision::where('estado', 'pendiente')->sum('total_comision');
-        $emprendimientosCount = Emprendimiento::count();
+        $this->authorize('viewAny', Comision::class);
 
-        // Listado detallado de comisiones
-        $comisiones = Comision::with(['emprendimiento.usuario'])->latest()->paginate(10);
+        return view('admin.comisiones.index', [
+            'comisiones' => Comision::with(['pedido', 'emprendimiento'])->latest()->paginate(15),
+            'total' => Comision::sum('total_comision'),
+            'pendiente' => Comision::where('estado', CommissionStatus::PENDIENTE->value)->sum('total_comision'),
+        ]);
+    }
 
-        return view('admin.comisiones.index', compact(
-            'totalVentas',
-            'totalComisiones',
-            'comisionesPendientes',
-            'emprendimientosCount',
-            'comisiones'
-        ));
+    public function update(UpdateCommissionStatusRequest $request, Comision $comision): RedirectResponse
+    {
+        $this->statuses->transition($comision, CommissionStatus::from($request->validated('estado')));
+
+        return back()->with('success', 'Estado de la comisión actualizado.');
     }
 }

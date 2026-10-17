@@ -1,32 +1,16 @@
 <?php
-
 namespace Database\Seeders;
-
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
+use App\Enums\UserRole;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-
+use Illuminate\Database\Seeder;
 class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Administrador
-        User::create([
-            'name' => 'Admin Sistema',
-            'email' => 'admin@emprendelink.test',
-            'password' => Hash::make('password'),
-            'rol' => 'admin',
-        ]);
-
-        // Emprendedores
-        for ($i = 1; $i <= 3; $i++) {
-            User::create([
-                'name' => "Emprendedor $i",
-                'email' => "emp$i@emprendelink.test",
-                'password' => Hash::make('password'),
-                'rol' => 'emprendedor',
-            ]);
-        }
+        foreach ([
+            ['name'=>'Administración EmprendeLink','email'=>'admin@emprendelink.test','rol'=>UserRole::ADMIN],
+            ['name'=>'Emprendedora Demo','email'=>'emprendedor@emprendelink.test','rol'=>UserRole::EMPRENDEDOR],
+            ['name'=>'Cliente Demo','email'=>'cliente@emprendelink.test','rol'=>UserRole::CLIENTE],
+        ] as $data) User::updateOrCreate(['email'=>$data['email']],$data+['password'=>'password','estado'=>true,'telefono'=>'7000-0000','direccion'=>'San Salvador']);
     }
 }

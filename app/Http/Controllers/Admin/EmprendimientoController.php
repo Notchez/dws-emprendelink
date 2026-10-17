@@ -1,68 +1,17 @@
 <?php
-
 namespace App\Http\Controllers\Admin;
-
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Emprendimiento;
-
+use App\Models\Plan;
+use App\Http\Requests\Admin\AssignBusinessPlanRequest;
+use App\Http\Requests\Admin\UpdateBusinessAdministrationRequest;
+use App\Services\Admin\BusinessAdministrationService;
+use Illuminate\View\View;
 class EmprendimientoController extends Controller
 {
-    // 1. Listar emprendedores con buscador y filtros (RF-06)
-    public function index(Request $request)
-    {
-        // Se agrega 'suscripciones.plan' para traer la relación completa del plan en la tabla
-        $query = Emprendimiento::with(['usuario', 'suscripciones.plan', 'comisiones']);
-
-        if ($request->filled('search')) {
-            $query->where('nombre', 'like', '%' . $request->search . '%');
-        }
-
-        if ($request->filled('estado')) {
-            $estadoFiltro = $request->estado;
-            $query->whereHas('suscripciones', function ($q) use ($estadoFiltro) {
-                $q->where('estado', $estadoFiltro);
-            });
-        }
-
-        $emprendimientos = $query->paginate(10);
-
-        return view('admin.emprendimientos.index', compact('emprendimientos'));
-    }
-
-    // 2. Ver detalles del emprendedor y su información financiera (RF-07)
-    public function show($id)
-    {
-        $emprendimiento = Emprendimiento::with(['usuario', 'comisiones', 'suscripciones.plan'])->findOrFail($id);
-
-        return view('admin.emprendimientos.show', compact('emprendimiento'));
-    }
-
-    // 3. Actualizar o suspender el estado de la cuenta mediante la suscripción (RF-08)
-    public function updateStatus(Request $request, int $id)
-    {
-        $request->validate([
-            'estado' => 'required|in:activa,vencida,cancelada', // Valores permitidos por el ENUM de suscripciones
-        ]);
-
-        $emprendimiento = Emprendimiento::findOrFail($id);
-
-        // Buscar la suscripción actual o más reciente
-        $suscripcion = $emprendimiento->suscripciones()->latest()->first();
-
-        if ($suscripcion) {
-            $suscripcion->estado = $request->estado;
-            $suscripcion->save();
-        } else {
-            // Si no cuenta con una suscripción previa, creamos una por defecto
-            $emprendimiento->suscripciones()->create([
-                'plan_id' => 1, // Plan inicial predeterminado
-                'fecha_inicio' => now(),
-                'estado' => $request->estado,
-            ]);
-        }
-
-        return redirect()->route('admin.emprendimientos.show', $id)
-            ->with('success', 'El estado del emprendimiento ha sido actualizado exitosamente.');
-    }
+    public function __construct(private BusinessAdministrationService $businesses) {}
+    public function index(): View { $q=Emprendimiento::with(['usuario','suscripcionActiva.plan'])->withCount(['productos','pedidos'])->when(request('search'),fn($q,$v)=>$q->where('nombre','like',"%$v%")); return view('admin.Emprendimientos.index',['emprendimientos'=>$q->latest()->paginate(15)->withQueryString()]); }
+    public function show(Emprendimiento $emprendimiento): View { return view('admin.Emprendimientos.show',['emprendimiento'=>$emprendimiento->load(['usuario','suscripcionActiva.plan'])->loadCount(['productos','pedidos']),'planes'=>Plan::where('estado',true)->orderBy('precio_mensual')->get()]); }
+    public function update(UpdateBusinessAdministrationRequest $request,Emprendimiento $emprendimiento) { $this->businesses->update($emprendimiento,$request->validated()); return back()->with('success','Emprendimiento actualizado.'); }
+    public function plan(AssignBusinessPlanRequest $request,Emprendimiento $emprendimiento) { $this->businesses->assignPlan($emprendimiento,Plan::where('estado',true)->findOrFail($request->integer('plan_id'))); return back()->with('success','Plan asignado correctamente.'); }
 }

@@ -1,66 +1,17 @@
 <?php
-
 namespace App\Policies;
-
+use App\Enums\UserRole;
 use App\Models\Pedido;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
-
 class PedidoPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
-    public function viewAny(User $user): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can view the model.
-     */
+    public function viewAny(User $user): bool { return $user->hasRole(UserRole::ADMIN, UserRole::EMPRENDEDOR, UserRole::CLIENTE); }
     public function view(User $user, Pedido $pedido): bool
     {
-        return false;
+        return $user->hasRole(UserRole::ADMIN)
+            || ($user->hasRole(UserRole::CLIENTE) && $pedido->cliente_id === $user->id)
+            || ($user->hasRole(UserRole::EMPRENDEDOR) && $pedido->emprendimiento?->usuario_id === $user->id);
     }
-
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(User $user): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(User $user, Pedido $pedido): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(User $user, Pedido $pedido): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(User $user, Pedido $pedido): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(User $user, Pedido $pedido): bool
-    {
-        return false;
-    }
+    public function create(User $user): bool { return $user->hasRole(UserRole::CLIENTE); }
+    public function update(User $user, Pedido $pedido): bool { return $user->hasRole(UserRole::EMPRENDEDOR) && $pedido->emprendimiento?->usuario_id === $user->id; }
 }

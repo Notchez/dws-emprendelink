@@ -1,29 +1,6 @@
 <?php
-
 namespace App\Http\Requests\Emprendedor;
-
-use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Foundation\Http\FormRequest;
-
-class UpdateProductRequest extends FormRequest
+class UpdateProductRequest extends StoreProductRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return false;
-    }
-
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
-    public function rules(): array
-    {
-        return [
-            //
-        ];
-    }
+    public function authorize(): bool { return $this->user()?->can('update',$this->route('producto')) === true; }
 }

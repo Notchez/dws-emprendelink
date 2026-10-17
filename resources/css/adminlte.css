@@ -135,3 +135,37 @@ small,
 .surface-soft {
     background-color: var(--el-primary-light);
 }
+
+body { min-height: 100vh; }
+.card { border: 1px solid #e5e7eb; border-radius: .85rem; box-shadow: 0 .25rem 1rem rgb(15 23 42 / 4%); }
+.table > :not(caption) > * > * { padding: .85rem .75rem; vertical-align: middle; }
+.badge-soft { color: var(--el-primary); background: var(--el-primary-light); }
+.empty-state { padding: 3rem 1rem; text-align: center; color: var(--el-text-secondary); }
+.storefront-body { background: var(--el-background); color: var(--el-text); }
+.storefront-header { position: sticky; top: 0; z-index: 10; background: rgb(255 255 255 / 96%); border-bottom: 1px solid #e5e7eb; backdrop-filter: blur(8px); }
+.brand-link { color: var(--el-text); font-size: 1.1rem; font-weight: 750; text-decoration: none; }
+.brand-link span { color: var(--el-primary); }
+.product-card { overflow: hidden; transition: transform .18s ease, box-shadow .18s ease; }
+.product-card:hover { transform: translateY(-2px); box-shadow: 0 .8rem 2rem rgb(15 23 42 / 9%); }
+.product-image,
+.product-card-image,
+.admin-product-image { width: 100%; aspect-ratio: 4 / 3; object-fit: contain; padding: .75rem; background: #f8fafc; }
+.product-detail-image { width: 100%; max-height: 36rem; aspect-ratio: 4 / 3; object-fit: contain; padding: 1rem; background: #f8fafc; border: 1px solid #e5e7eb; }
+.product-placeholder { display: grid; place-items: center; aspect-ratio: 4 / 3; background: linear-gradient(135deg,#eff6ff,#f8fafc); color: #93a3b8; font-size: 3rem; }
+.image-upload-preview { display: block; width: min(100%, 24rem); max-height: 16rem; object-fit: contain; padding: .75rem; background: #f8fafc; border: 1px solid var(--el-border); border-radius: .75rem; }
+.image-upload-preview[hidden] { display: none; }
+.form-control:disabled,
+.form-control[readonly],
+.form-select:disabled { color: var(--el-text); background-color: #f1f5f9; border-color: #cbd5e1; opacity: 1; cursor: not-allowed; }
+.orders-surface,
+.orders-surface .card,
+.orders-surface .table,
+.orders-surface .table > :not(caption) > * > * { color: var(--el-text); }
+.orders-surface .table thead th { color: #374151; background: #f8fafc; }
+.status-badge { color: #1e40af; background: #dbeafe; border: 1px solid #bfdbfe; }
+.price { color: var(--el-primary); font-size: 1.35rem; font-weight: 750; }
+.metric-card .metric-icon { width: 2.75rem; height: 2.75rem; display: grid; place-items: center; border-radius: .75rem; background: var(--el-primary-light); color: var(--el-primary); }
+.form-label { font-weight: 600; }
+.auth-shell { min-height: calc(100vh - 70px); display: grid; place-items: center; }
+.auth-card { width: min(100%, 30rem); }
+@media (max-width: 767.98px) { .storefront-header .nav-link { font-size: .8rem; } .app-content-header h1 { font-size: 1.5rem; } }

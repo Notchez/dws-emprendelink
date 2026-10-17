@@ -1,14 +1,44 @@
 <?php
-
 namespace App\Services\Emprendedor;
+
+use App\Models\Emprendimiento;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use RuntimeException;
+use Throwable;
 
 class BusinessProfileService
 {
-    /**
-     * Create a new class instance.
-     */
-    public function __construct()
+    public function update(Emprendimiento $business, array $data, ?UploadedFile $logo = null): Emprendimiento
     {
-        //
+        $data['slug'] = $business->nombre === $data['nombre'] ? $business->slug : Str::slug($data['nombre']).'-'.$business->id;
+
+        $previousLogo = $business->logo_url;
+        $newLogo = $logo ? Storage::disk('public')->putFile('emprendimientos', $logo) : null;
+
+        if ($logo && ! $newLogo) {
+            throw new RuntimeException('No se pudo guardar el logo del emprendimiento.');
+        }
+
+        if ($newLogo) {
+            $data['logo_url'] = $newLogo;
+        }
+
+        try {
+            $business->update($data);
+        } catch (Throwable $exception) {
+            if ($newLogo) {
+                Storage::disk('public')->delete($newLogo);
+            }
+
+            throw $exception;
+        }
+
+        if ($newLogo && $previousLogo && $previousLogo !== $newLogo) {
+            Storage::disk('public')->delete($previousLogo);
+        }
+
+        return $business->refresh();
     }
 }

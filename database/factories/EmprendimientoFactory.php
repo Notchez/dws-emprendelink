@@ -15,12 +15,13 @@ class EmprendimientoFactory extends Factory
     {
         $nombre = $this->faker->company();
         return [
-            'usuario_id' => User::factory(),
+            'usuario_id' => User::factory()->entrepreneur(),
             'nombre' => $nombre,
             'slug' => Str::slug($nombre) . '-' . $this->faker->unique()->numberBetween(100, 999),
             'descripcion' => $this->faker->paragraph(),
             'telefono_contacto' => $this->faker->phoneNumber(),
             'logo_url' => null,
+            'estado' => true,
         ];
     }
 }

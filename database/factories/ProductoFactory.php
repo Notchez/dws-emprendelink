@@ -15,7 +15,7 @@ class ProductoFactory extends Factory
     {
         return [
             'emprendimiento_id' => Emprendimiento::factory(),
-            'categoria_id' => null, // Opcional
+            'categoria_id' => null,
             'nombre' => $this->faker->words(3, true),
             'descripcion' => $this->faker->sentence(),
             'precio' => $this->faker->randomFloat(2, 5, 200),

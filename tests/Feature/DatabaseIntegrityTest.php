@@ -14,6 +14,7 @@ use App\Models\Pedido;
 use App\Models\DetallePedido;
 use App\Models\Comision;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Str;
 
 class DatabaseIntegrityTest extends TestCase
 {
@@ -47,11 +48,16 @@ class DatabaseIntegrityTest extends TestCase
         
         $pedido = Pedido::create([
             'emprendimiento_id' => $emprendimiento->id,
+            'codigo_publico' => (string) Str::uuid(),
+            'token_idempotencia' => (string) Str::uuid(),
             'nombre_cliente' => 'Juan',
             'telefono_cliente' => '1234',
             'modalidad_entrega' => 'retiro',
             'estado_actual' => 'Entregado',
             'subtotal' => 100,
+            'plan_id_aplicado' => $plan->id,
+            'nombre_plan_aplicado' => $plan->nombre,
+            'porcentaje_comision_aplicado' => $plan->porcentaje_comision,
         ]);
 
         Comision::create([
@@ -76,10 +82,6 @@ class DatabaseIntegrityTest extends TestCase
 
     public function test_category_soft_delete_sets_products_category_id_to_null_on_delete()
     {
-        // This is physically managed by ON DELETE SET NULL on DB level if hard deleted.
-        // But since Categoria uses SoftDeletes, soft deleting won't trigger the DB constraint.
-        // We test the hard delete scenario to verify the DB constraint.
-        
         $user = User::factory()->create();
         $emprendimiento = Emprendimiento::factory()->create(['usuario_id' => $user->id]);
         $categoria = Categoria::factory()->create(['emprendimiento_id' => $emprendimiento->id]);
@@ -89,7 +91,6 @@ class DatabaseIntegrityTest extends TestCase
             'categoria_id' => $categoria->id,
         ]);
 
-        // Force Hard delete
         $categoria->forceDelete();
 
         $producto->refresh();

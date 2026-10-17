@@ -1,107 +1,30 @@
+@php($isAdmin = auth()->user()->hasRole(\App\Enums\UserRole::ADMIN))
 <aside id="main-sidebar" class="app-sidebar" aria-label="Menú principal">
-    <div class="sidebar-brand">
-        <a href="{{ route('admin.dashboard') }}" class="brand-link text-decoration-none">
-            <i class="bi bi-shop text-primary me-2" aria-hidden="true"></i>
-            <span class="brand-text fw-bold text-primary">EmprendeLink</span>
-        </a>
-    </div>
-
-    <div class="sidebar-wrapper">
-        <nav class="mt-2" aria-label="Navegación Administrador">
-            <ul class="nav sidebar-menu flex-column gap-1">
-                
-                <!-- Inicio / Dashboard -->
-                <li class="nav-item">
-                    <a href="{{ route('admin.dashboard') }}"
-                       @class(['nav-link', 'active' => request()->routeIs('admin.dashboard')])
-                       @if(request()->routeIs('admin.dashboard')) aria-current="page" @endif>
-                        <i class="nav-icon bi bi-house" aria-hidden="true"></i>
-                        <p>Inicio</p>
-                    </a>
-                </li>
-
-                <!-- Emprendedores -->
-                <li class="nav-item">
-                    <a href="{{ route('admin.emprendimientos.index') }}"
-                       @class(['nav-link', 'active' => request()->routeIs('admin.emprendimientos.*')])
-                       @if(request()->routeIs('admin.emprendimientos.*')) aria-current="page" @endif>
-                        <i class="nav-icon bi bi-shop" aria-hidden="true"></i>
-                        <p>Emprendedores</p>
-                    </a>
-                </li>
-
-                <!-- Planes -->
-                <li class="nav-item">
-                    <a href="{{ route('admin.planes.index') }}"
-                       @class(['nav-link', 'active' => request()->routeIs('admin.planes.*')])
-                       @if(request()->routeIs('admin.planes.*')) aria-current="page" @endif>
-                        <i class="nav-icon bi bi-tags" aria-hidden="true"></i>
-                        <p>Planes</p>
-                    </a>
-                </li>
-
-                <!-- Comisiones / Reportes -->
-<li class="nav-item">
-    <a href="{{ route('admin.comisiones.index') }}"
-       @class(['nav-link', 'active' => request()->routeIs('admin.comisiones.*') || request()->routeIs('admin.reportes.*')])
-       @if(request()->routeIs('admin.comisiones.*') || request()->routeIs('admin.reportes.*')) aria-current="page" @endif>
-        <i class="nav-icon bi bi-percent" aria-hidden="true"></i>
-        <p>Comisiones / Reportes</p>
-    </a>
-</li>
-
-<!-- Usuarios -->
-<li class="nav-item">
-    <a href="{{ route('admin.users.index') }}"
-       @class(['nav-link', 'active' => request()->routeIs('admin.users.*')])
-       @if(request()->routeIs('admin.users.*')) aria-current="page" @endif>
-        <i class="nav-icon bi bi-people" aria-hidden="true"></i>
-        <p>Usuarios</p>
-    </a>
-</li>
-
-                <!-- Pagos -->
-                <li class="nav-item">
-                    <a href="{{ route('admin.pagos.index') }}"
-                       @class(['nav-link', 'active' => request()->routeIs('admin.pagos.*')])
-                       @if(request()->routeIs('admin.pagos.*')) aria-current="page" @endif>
-                        <i class="nav-icon bi bi-wallet2" aria-hidden="true"></i>
-                        <p>Pagos</p>
-                    </a>
-                </li>
-
-                <!-- Usuarios -->
-<li class="nav-item">
-    <a href="{{ route('admin.users.index') }}"
-       @class(['nav-link', 'active' => request()->routeIs('admin.users.*')])
-       @if(request()->routeIs('admin.users.*')) aria-current="page" @endif>
-        <i class="nav-icon bi bi-people" aria-hidden="true"></i>
-        <p>Usuarios</p>
-    </a>
-</li>
-
-                <!-- Configuración -->
-                <li class="nav-item">
-                    <a href="{{ route('admin.configuracion.index') }}"
-                       @class(['nav-link', 'active' => request()->routeIs('admin.configuracion.*')])
-                       @if(request()->routeIs('admin.configuracion.*')) aria-current="page" @endif>
-                        <i class="nav-icon bi bi-gear" aria-hidden="true"></i>
-                        <p>Configuración</p>
-                    </a>
-                </li>
-
-                <!-- Cerrar sesión -->
-                <li class="nav-item mt-3">
-                    <form action="{{ route('logout') }}" method="POST">
-                        @csrf
-                        <button type="submit" class="nav-link text-danger border-0 bg-transparent w-100 text-start">
-                            <i class="nav-icon bi bi-box-arrow-right" aria-hidden="true"></i>
-                            <p>Cerrar sesión</p>
-                        </button>
-                    </form>
-                </li>
-
-            </ul>
-        </nav>
-    </div>
+    <div class="sidebar-brand"><a href="{{ $isAdmin ? route('admin.dashboard') : route('entrepreneur.dashboard') }}" class="brand-link text-decoration-none"><i class="bi bi-shop text-primary me-2"></i><span class="brand-text fw-bold">Emprende<span class="text-primary">Link</span></span></a></div>
+    <div class="sidebar-wrapper"><nav class="mt-2"><ul class="nav sidebar-menu flex-column gap-1">
+        @if($isAdmin)
+            @foreach([
+                ['admin.dashboard','admin.dashboard','speedometer2','Dashboard'],
+                ['admin.users.*','admin.users.index','people','Usuarios'],
+                ['admin.emprendimientos.*','admin.emprendimientos.index','shop','Emprendimientos'],
+                ['admin.planes.*','admin.planes.index','tags','Planes'],
+                ['admin.pedidos.*','admin.pedidos.index','receipt','Pedidos'],
+                ['admin.comisiones.*','admin.comisiones.index','percent','Comisiones'],
+            ] as [$match,$route,$icon,$label])
+                <li class="nav-item"><a href="{{ route($route) }}" @class(['nav-link','active'=>request()->routeIs($match)])><i class="nav-icon bi bi-{{ $icon }}"></i><p>{{ $label }}</p></a></li>
+            @endforeach
+        @else
+            @foreach([
+                ['entrepreneur.dashboard','entrepreneur.dashboard','speedometer2','Resumen'],
+                ['entrepreneur.orders.*','entrepreneur.orders.index','receipt','Pedidos'],
+                ['entrepreneur.business.*','entrepreneur.business.show','shop','Mi negocio'],
+                ['entrepreneur.categories.*','entrepreneur.categories.index','bookmark','Categorías'],
+                ['entrepreneur.products.*','entrepreneur.products.index','box-seam','Productos'],
+                ['entrepreneur.sales.*','entrepreneur.sales.index','graph-up','Ventas'],
+                ['entrepreneur.commissions.*','entrepreneur.commissions.index','percent','Comisiones'],
+            ] as [$match,$route,$icon,$label])
+                <li class="nav-item"><a href="{{ route($route) }}" @class(['nav-link','active'=>request()->routeIs($match)])><i class="nav-icon bi bi-{{ $icon }}"></i><p>{{ $label }}</p></a></li>
+            @endforeach
+        @endif
+    </ul></nav></div>
 </aside>
