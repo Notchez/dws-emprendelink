@@ -9,7 +9,7 @@
                 ['admin.emprendimientos.*','admin.emprendimientos.index','shop','Emprendimientos'],
                 ['admin.planes.*','admin.planes.index','tags','Planes'],
                 ['admin.pedidos.*','admin.pedidos.index','receipt','Pedidos'],
-                ['admin.comisiones.*','admin.comisiones.index','percent','Comisiones'],
+                ['admin.comisiones.*','admin.comisiones.index','calendar-check','Cargos mensuales'],
             ] as [$match,$route,$icon,$label])
                 <li class="nav-item"><a href="{{ route($route) }}" @class(['nav-link','active'=>request()->routeIs($match)])><i class="nav-icon bi bi-{{ $icon }}"></i><p>{{ $label }}</p></a></li>
             @endforeach
@@ -21,7 +21,7 @@
                 ['entrepreneur.categories.*','entrepreneur.categories.index','bookmark','Categorías'],
                 ['entrepreneur.products.*','entrepreneur.products.index','box-seam','Productos'],
                 ['entrepreneur.sales.*','entrepreneur.sales.index','graph-up','Ventas'],
-                ['entrepreneur.commissions.*','entrepreneur.commissions.index','percent','Comisiones'],
+                ['entrepreneur.commissions.*','entrepreneur.commissions.index','calendar3','Cuenta mensual'],
             ] as [$match,$route,$icon,$label])
                 <li class="nav-item"><a href="{{ route($route) }}" @class(['nav-link','active'=>request()->routeIs($match)])><i class="nav-icon bi bi-{{ $icon }}"></i><p>{{ $label }}</p></a></li>
             @endforeach

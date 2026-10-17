@@ -30,7 +30,7 @@ Prefijo `/emprendedor`, nombre `entrepreneur.*`, middleware `auth`, `active` y `
 - Categorías: listado, creación, actualización y baja lógica.
 - Productos: listado, alta, edición y activación/desactivación.
 - Pedidos: listado, detalle y transición de estado.
-- Ventas y comisiones: consultas del emprendimiento autenticado.
+- Ventas y cuenta mensual: consultas del emprendimiento autenticado. `/emprendedor/comisiones` usa un selector `YYYY-MM` y no permite modificaciones.
 
 ## Administración
 
@@ -40,6 +40,9 @@ Prefijo `/admin`, nombre `admin.*`, middleware `auth`, `active` y `role:admin`.
 - Emprendimientos y asignación de plan.
 - CRUD de planes sin borrado físico y endpoint dedicado de activación/desactivación.
 - Consulta global de pedidos.
-- Consulta y transición terminal de comisiones.
+- `/admin/comisiones`: cargos mensuales consolidados por emprendimiento.
+- `PATCH /admin/estados-cuenta/{estadoCuenta}/pagar`: pago atómico de un mes cerrado completo.
+
+No existe un endpoint para pagar o anular una comisión individual.
 
 Ejecute `php artisan route:list` para el inventario exacto y sus middlewares.

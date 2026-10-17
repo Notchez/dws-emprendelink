@@ -166,7 +166,7 @@ Ubicación: `app/Services/Commissions`.
 
 - `CommissionCalculator`.
 - `CommissionLedgerService`.
-- `CommissionStatusService`.
+- `MonthlyAccountStatementService`.
 
 ## 7. Autorización
 

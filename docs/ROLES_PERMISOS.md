@@ -12,7 +12,8 @@ Las comprobaciones se realizan en servidor mediante middleware, Form Requests, P
 | Administrar negocio, categorías y productos | No | No | Propios | Negocios según rutas admin |
 | Cambiar estado de pedido | No | No | De su negocio | Consulta global |
 | Consultar ventas y comisiones | No | No | Propias | Todas |
-| Cambiar estado de comisión | No | No | No | Pendiente a pagada/anulada |
+| Consultar la cuenta mensual | No | No | Propia | Todas |
+| Marcar un mes cerrado como pagado | No | No | No | Sí, pago mensual completo |
 | Gestionar usuarios y planes | No | No | No | Sí |
 
 Reglas relevantes:
@@ -23,4 +24,6 @@ Reglas relevantes:
 - Un emprendedor solo puede modificar recursos cuyo emprendimiento le pertenece.
 - El nombre, slug, plan y estado administrativo del emprendimiento son controlados por el admin; el emprendedor edita descripción, contacto y logo.
 - El admin no puede suspender su propia cuenta desde el endpoint administrativo.
-- Una comisión pagada o anulada es terminal; el emprendedor carece de endpoint de actualización.
+- Las comisiones individuales son detalles contables por pedido y no tienen acciones de pago.
+- El emprendedor solo consulta sus estados de cuenta mensuales.
+- El admin puede pagar un `EstadoCuenta` completo cuando el período ya cerró. No hay pagos parciales, anulaciones ni reapertura.

@@ -23,5 +23,6 @@ Route::middleware(['auth', 'active', 'role:admin'])->prefix('admin')->name('admi
     Route::get('/pedidos', [DashboardController::class, 'orders'])->name('pedidos.index');
     Route::get('/pedidos/{pedido}', [DashboardController::class, 'order'])->name('pedidos.show');
     Route::get('/comisiones', [CommissionController::class, 'index'])->name('comisiones.index');
-    Route::patch('/comisiones/{comision}/estado', [CommissionController::class, 'update'])->name('comisiones.update');
+    Route::patch('/estados-cuenta/{estadoCuenta}/pagar', [CommissionController::class, 'pay'])
+        ->name('account-statements.pay');
 });

@@ -41,4 +41,10 @@ La comisión se crea una sola vez cuando el pedido llega a `Entregado`:
 total_comision = monto_base * porcentaje_aplicado / 100
 ```
 
-El registro conserva monto base y porcentaje históricos. Su estado inicia `pendiente`; únicamente el admin puede pasarla a `pagada` o `anulada`. Al pagar se registra `pagada_at`. Ambos estados finales son terminales. El emprendedor consulta los cargos agrupados por el mes de creación de la comisión, sin controles administrativos de estado.
+Cada comisión conserva el monto base y el porcentaje históricos de un pedido. Es un detalle contable interno, no una factura ni una unidad de pago.
+
+Al crearla se recalcula el `EstadoCuenta` del emprendimiento para el mes de `comisiones.created_at`. El total mensual siempre se obtiene sumando las comisiones de ese período, por lo que un reintento no duplica el cargo.
+
+`EstadoCuenta` representa la obligación mensual completa. El admin solo puede marcar como pagado un período anterior al inicio del mes actual. La operación bloquea el estado de cuenta, recalcula su total y, en una misma transacción, marca como pagadas todas sus comisiones y registra la fecha de pago. No existen pagos parciales, pagos por pedido, anulaciones ni reapertura de meses pagados.
+
+El snapshot de plan, nombre y porcentaje debe existir desde checkout. Si falta o es inválido, el pedido no puede pasar de `Listo` a `Entregado` y no se genera historial, comisión ni estado de cuenta.

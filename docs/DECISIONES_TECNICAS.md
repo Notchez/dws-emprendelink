@@ -79,7 +79,7 @@ No asumir que todas las combinaciones son válidas.
 
 Responsables: integrantes 1 y 5.
 
-## DT-05 — Generación y cancelación de comisiones
+## DT-05 — Generación de comisiones y cierre mensual
 
 Estado: resuelto por DT-12.
 
@@ -99,7 +99,10 @@ Decisión aplicada:
 
 - Solo se cancela antes de Entregado.
 - Entregado es terminal y genera una comisión pendiente.
-- El admin puede pagar o anular una comisión; ambos resultados son terminales.
+- La comisión individual es un detalle contable del pedido, no una unidad de pago.
+- `EstadoCuenta` consolida la suma de las comisiones de un emprendimiento por mes.
+- El admin paga el período mensual completo una vez que está cerrado; no existen pagos parciales ni anulaciones.
+- El pago mensual es terminal y actualiza el estado de cuenta y todas sus comisiones en una sola transacción.
 
 No inventar ese comportamiento a partir del nombre de un estado.
 
@@ -208,7 +211,8 @@ Decisión confirmada el 16 de octubre de 2026:
 - Asociar cada pedido al cliente autenticado y conservar snapshots de sus datos de contacto.
 - Un carrito con varios negocios produce un pedido por emprendimiento dentro de una sola transacción.
 - Aplicar la matriz `Pendiente -> Confirmado/Cancelado`, `Confirmado -> En preparación/Cancelado`, `En preparación -> Listo/Cancelado`, `Listo -> Entregado/Cancelado`; Entregado y Cancelado son terminales.
-- Generar una sola comisión al llegar a Entregado. Al ser Entregado terminal, no se admite una cancelación posterior que requiera anular la comisión.
+- Generar una sola comisión al llegar a Entregado y recalcular su estado de cuenta mensual. Al ser Entregado terminal, no existe una anulación posterior de la comisión.
+- Exigir el snapshot de plan y porcentaje creado en checkout antes de entregar; nunca reconstruirlo con el plan actual.
 - Conservar en el pedido el plan, nombre y porcentaje aplicados para evitar recálculos retroactivos.
 - Mantener UUID y tokens para garantías técnicas e idempotencia; mostrar `Pedido #ID` como referencia visible y proteger cada consulta mediante autenticación y Policies.
 

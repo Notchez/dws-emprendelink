@@ -1,17 +1,30 @@
 @extends('layouts.adminlte')
 
-@section('title', 'Comisiones')
+@section('title', 'Cuenta mensual')
 
 @section('content_header')
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
         <div>
-            <h1 class="fw-bold">Comisiones</h1>
-            <p class="text-body-secondary">Cargos generados por los pedidos entregados durante el mes.</p>
+            <h1 class="fw-bold">Cuenta mensual</h1>
+            <p class="text-body-secondary mb-0">
+                Resumen de los cargos generados por pedidos entregados.
+            </p>
         </div>
+
         <form method="GET" class="d-flex align-items-end gap-2">
             <div>
-                <label class="form-label" for="mes">Mes</label>
-                <input class="form-control" id="mes" name="mes" type="month" value="{{ $mes }}" required>
+                <label class="form-label" for="mes">Período</label>
+                <input
+                    class="form-control @error('mes') is-invalid @enderror"
+                    id="mes"
+                    name="mes"
+                    type="month"
+                    value="{{ $mes }}"
+                    required
+                >
+                @error('mes')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
             <button class="btn btn-primary">Consultar</button>
         </form>
@@ -19,53 +32,55 @@
 @endsection
 
 @section('content')
-    <div class="row g-3 mb-4">
-        @foreach([
-            ['Cargos del mes', $cargosMes],
-            ['Pendiente', $pendienteMes],
-            ['Pagado', $pagadoMes],
-        ] as [$label, $value])
-            <div class="col-md-4">
-                <div class="card metric-card h-100">
-                    <div class="card-body">
-                        <p class="text-body-secondary mb-1">{{ $label }}</p>
-                        <strong class="price">${{ number_format($value, 2) }}</strong>
+    <div class="row justify-content-center">
+        <div class="col-xl-8">
+            <div class="card orders-surface">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-wrap justify-content-between gap-3 mb-4">
+                        <div>
+                            <p class="text-body-secondary mb-1">Período</p>
+                            <h2 class="h4 mb-0">{{ $periodStart->format('m/Y') }}</h2>
+                        </div>
+                        <div class="text-md-end">
+                            <p class="text-body-secondary mb-1">Estado</p>
+                            @if(! $periodClosed)
+                                <span class="badge text-bg-info">Mes en curso</span>
+                            @elseif($statement?->estado_pago === \App\Enums\AccountStatementStatus::PAGADO)
+                                <span class="badge text-bg-success">Pagado</span>
+                            @elseif($commissionCount > 0)
+                                <span class="badge text-bg-warning">Pendiente de pago</span>
+                            @else
+                                <span class="badge text-bg-secondary">Sin cargos</span>
+                            @endif
+                        </div>
                     </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="border rounded-3 p-3 h-100">
+                                <p class="text-body-secondary mb-1">Total de cargos</p>
+                                <strong class="price">
+                                    ${{ number_format($statement?->total_adeudado ?? 0, 2) }}
+                                </strong>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded-3 p-3 h-100">
+                                <p class="text-body-secondary mb-1">Pedidos entregados</p>
+                                <strong class="price">{{ $commissionCount }}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if($statement?->fecha_pago)
+                        <hr>
+                        <p class="mb-0">
+                            <span class="text-body-secondary">Fecha de pago:</span>
+                            {{ $statement->fecha_pago->format('d/m/Y H:i') }}
+                        </p>
+                    @endif
                 </div>
             </div>
-        @endforeach
-    </div>
-
-    <div class="card orders-surface">
-        <div class="table-responsive">
-            <table class="table mb-0">
-                <thead>
-                    <tr>
-                        <th>Pedido</th>
-                        <th>Fecha</th>
-                        <th>Monto base</th>
-                        <th>Porcentaje</th>
-                        <th>Comisión</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($comisiones as $comision)
-                        <tr>
-                            <td>Pedido #{{ $comision->pedido_id }}</td>
-                            <td>{{ $comision->created_at->format('d/m/Y') }}</td>
-                            <td>${{ number_format($comision->monto_base, 2) }}</td>
-                            <td>{{ number_format($comision->porcentaje_aplicado, 2) }}%</td>
-                            <td>${{ number_format($comision->total_comision, 2) }}</td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="empty-state">No hay comisiones para el mes seleccionado.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
         </div>
     </div>
-
-    <div class="mt-3">{{ $comisiones->links() }}</div>
 @endsection
