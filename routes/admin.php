@@ -1,48 +1,28 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Admin\EmprendimientoController;
-use App\Http\Controllers\Admin\PlanController;
 use App\Http\Controllers\Admin\CommissionController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\EmprendimientoController;
+use App\Http\Controllers\Admin\PlanController;
 use App\Http\Controllers\Admin\UserController;
+use Illuminate\Support\Facades\Route;
 
-//Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-Route::prefix('admin')->name('admin.')->group(function () {
-
-    // --- DASHBOARD / INICIO ---
+Route::middleware(['auth', 'active', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-
-    // --- MÓDULO 1: Gestión de Emprendimientos ---
+    Route::get('/usuarios', [UserController::class, 'index'])->name('users.index');
+    Route::get('/usuarios/nuevo-emprendedor', [UserController::class, 'createEntrepreneur'])->name('users.create-entrepreneur');
+    Route::post('/usuarios/nuevo-emprendedor', [UserController::class, 'storeEntrepreneur'])->name('users.store-entrepreneur');
+    Route::get('/usuarios/{user}', [UserController::class, 'show'])->name('users.show');
+    Route::patch('/usuarios/{user}/estado', [UserController::class, 'status'])->name('users.status');
     Route::get('/emprendimientos', [EmprendimientoController::class, 'index'])->name('emprendimientos.index');
-    Route::get('/emprendimientos/{id}', [EmprendimientoController::class, 'show'])->name('emprendimientos.show');
-    Route::put('/emprendimientos/{id}/estado', [EmprendimientoController::class, 'updateStatus'])->name('emprendimientos.status');
-
-    // --- MÓDULO 2: Gestión de Planes (RF-09, RF-10) ---
-    Route::get('/planes', [PlanController::class, 'index'])->name('planes.index');
-    Route::get('/planes/{id}/edit', [PlanController::class, 'edit'])->name('planes.edit');
-    Route::put('/planes/{id}', [PlanController::class, 'update'])->name('planes.update');
-
-    // --- MÓDULO 3: Comisiones, Reportes y Pagos ---
+    Route::get('/emprendimientos/{emprendimiento}', [EmprendimientoController::class, 'show'])->name('emprendimientos.show');
+    Route::put('/emprendimientos/{emprendimiento}', [EmprendimientoController::class, 'update'])->name('emprendimientos.update');
+    Route::patch('/emprendimientos/{emprendimiento}/plan', [EmprendimientoController::class, 'plan'])->name('emprendimientos.plan');
+    Route::patch('/planes/{plan}/estado', [PlanController::class, 'status'])->name('planes.status');
+    Route::resource('planes', PlanController::class)->parameters(['planes' => 'plan'])->except(['show', 'destroy']);
+    Route::get('/pedidos', [DashboardController::class, 'orders'])->name('pedidos.index');
+    Route::get('/pedidos/{pedido}', [DashboardController::class, 'order'])->name('pedidos.show');
     Route::get('/comisiones', [CommissionController::class, 'index'])->name('comisiones.index');
-    Route::get('/reportes', [CommissionController::class, 'index'])->name('reportes.index');
-    Route::get('/pagos', [CommissionController::class, 'index'])->name('pagos.index');
-
-    // --- GESTIÓN DE USUARIOS ---
-    Route::get('/usuarios', [UserController::class, 'index'])->name('users.index');
-    Route::get('/usuarios/{id}', [UserController::class, 'show'])->name('users.show');
-
-    // --- PAGOS Y CONFIGURACIÓN ---
-    Route::get('/pagos', [CommissionController::class, 'index'])->name('pagos.index');
-    Route::get('/configuracion', function () {
-        return view('admin.configuracion.index');
-    })->name('configuracion.index');
-
-    // --- AUDITORÍA DE PEDIDOS ---
-    Route::get('/pedidos', [DashboardController::class, 'indexPedidos'])->name('pedidos.index');
-    Route::get('/pedidos/{id}', [DashboardController::class, 'showPedido'])->name('pedidos.show');
-
-    // --- GESTIÓN DE USUARIOS ---
-    Route::get('/usuarios', [UserController::class, 'index'])->name('users.index');
-    Route::get('/usuarios/{id}', [UserController::class, 'show'])->name('users.show');
+    Route::patch('/estados-cuenta/{estadoCuenta}/pagar', [CommissionController::class, 'pay'])
+        ->name('account-statements.pay');
 });

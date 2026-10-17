@@ -53,7 +53,7 @@ Declarar explícitamente `$table` cuando sea necesario. No depender de que Eloqu
 
 Los modelos se ubican en `app/Models`.
 
-## 4. Controladores previstos
+## 4. Controladores implementados
 
 ### Administración
 
@@ -68,7 +68,7 @@ Ubicación: `app/Http/Controllers/Admin`.
 
 Ubicación: `app/Http/Controllers/Auth`.
 
-- `RegisteredEmprendedorController`.
+- `RegisteredCustomerController`.
 - `AuthenticatedSessionController`.
 
 ### Emprendedor
@@ -77,6 +77,7 @@ Ubicación: `app/Http/Controllers/Emprendedor`.
 
 - `DashboardController`.
 - `BusinessController`.
+- `CategoryController`.
 - `ProductController`.
 - `OrderController`.
 - `CommissionController`.
@@ -86,20 +87,18 @@ Ubicación: `app/Http/Controllers/Emprendedor`.
 Ubicación: `app/Http/Controllers/Storefront`.
 
 - `CatalogController`.
-- `OrderController`.
-- `OrderStatusController`.
+- `CartController`.
+- `CheckoutController`.
+- `CustomerOrderController`.
+- `ProfileController`.
 
-Los controladores iniciales son esqueletos. Cada responsable debe completar sus métodos y pruebas antes de conectar las rutas funcionales.
-
-La gestión de categorías debe mantener una ubicación y un contrato acordados dentro del módulo del Integrante 4.
-
-## 5. Form Requests previstos
+## 5. Form Requests implementados
 
 ### Autenticación
 
 Ubicación: `app/Http/Requests/Auth`.
 
-- `RegisterEmprendedorRequest`.
+- `RegisterCustomerRequest`.
 - `LoginRequest`
 
 ### Administración
@@ -128,11 +127,8 @@ Ubicación: `app/Http/Requests/Emprendedor`.
 Ubicación: `app/Http/Requests/Storefront`.
 
 - `StoreOrderRequest`.
-- `LookupOrderStatusRequest`.
 
-Cada Request debe implementar las reglas y la autorización correspondientes antes de utilizarse en un controlador.
-
-## 6. Servicios previstos
+## 6. Servicios implementados
 
 ### Autenticación
 
@@ -163,7 +159,6 @@ Ubicación: `app/Services/Orders`.
 
 - `OrderPlacementService`.
 - `OrderWorkflowService`.
-- `OrderStatusLookupService`.
 
 ### Comisiones
 
@@ -171,6 +166,7 @@ Ubicación: `app/Services/Commissions`.
 
 - `CommissionCalculator`.
 - `CommissionLedgerService`.
+- `MonthlyAccountStatementService`.
 
 ## 7. Autorización
 
@@ -197,15 +193,14 @@ Su alias `role` debe registrarse en `bootstrap/app.php` cuando se implemente.
 
 Las Policies no sustituyen las consultas restringidas por propietario. Ambos controles deben aplicarse cuando corresponda.
 
-## 8. Excepciones previstas
+## 8. Excepciones del dominio
 
 Ubicación: `app/Exceptions`.
 
 - `ProductLimitReachedException`.
 - `InvalidOrderTransitionException`.
-- `DuplicateCommissionException`.
 
-La implementación debe decidir si una repetición válida devuelve el resultado existente o representa un error. La prevención de comisiones duplicadas debe mantenerse en ambos casos.
+La repetición de la generación de comisión devuelve el registro existente y la restricción única impide duplicados.
 
 Los errores deben presentarse sin exponer trazas ni datos sensibles.
 

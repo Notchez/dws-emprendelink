@@ -8,13 +8,9 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureUserHasRole
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  Closure(Request): (Response)  $next
-     */
-    public function handle(Request $request, Closure $next): Response
+    public function handle(Request $request, Closure $next, string ...$roles): Response
     {
+        abort_unless($request->user()?->hasRole(...$roles), 403, 'No tienes permiso para acceder a esta sección.');
         return $next($request);
     }
 }

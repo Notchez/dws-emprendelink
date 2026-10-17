@@ -2,28 +2,18 @@
 
 namespace App\Http\Requests\Admin;
 
-use Illuminate\Contracts\Validation\ValidationRule;
+use App\Enums\UserRole;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StorePlanRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return false;
+        return $this->user()?->hasRole(UserRole::ADMIN) === true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
-        return [
-            //
-        ];
+        return ['nombre' => ['required', 'string', 'max:100', 'unique:planes,nombre'], 'descripcion' => ['nullable', 'string', 'max:1000'], 'precio_mensual' => ['required', 'numeric', 'min:0'], 'porcentaje_comision' => ['required', 'numeric', 'min:0', 'max:100'], 'limite_productos' => ['required', 'integer', 'min:1']];
     }
 }

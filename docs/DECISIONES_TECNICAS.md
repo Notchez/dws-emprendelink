@@ -36,20 +36,19 @@ Centralizar los estilos en `resources/css/adminlte.css`.
 
 ## DT-03 — Usuarios, roles y suspensión
 
-Estado: pendiente de cierre.
+Estado: resuelto por DT-12.
 
 El Diccionario referencia usuarios, pero no define completamente su tabla.
 
 Laravel incluye la tabla `users`.
 
-Propuesta que debe revisarse:
+Decisión implementada:
 
 - Mantener `users`.
-- Agregar un campo `role`.
-- Utilizar valores acordados para administrador y emprendedor.
+- Agregar el campo `rol` con Enum para `admin`, `emprendedor` y `cliente`.
 - Agregar un campo de estado de cuenta.
 - Conectar `emprendimientos.usuario_id` con la tabla de usuarios adoptada.
-- Definir la restricción de un emprendimiento por usuario cuando se confirme esa regla.
+- Restringir a un emprendimiento por usuario.
 
 Responsables: integrantes 1, 2 y 3.
 
@@ -57,7 +56,7 @@ El acuerdo debe reflejarse en migraciones, modelos, middleware, Policies, seeder
 
 ## DT-04 — Transiciones de pedidos
 
-Estado: pendiente de matriz aprobada.
+Estado: resuelto por DT-12.
 
 Estados presentes en el Diccionario:
 
@@ -68,7 +67,7 @@ Estados presentes en el Diccionario:
 - Entregado.
 - Cancelado.
 
-Debe definirse:
+La matriz aprobada define:
 
 - Qué transiciones están permitidas.
 - Desde qué estados puede cancelarse.
@@ -80,9 +79,9 @@ No asumir que todas las combinaciones son válidas.
 
 Responsables: integrantes 1 y 5.
 
-## DT-05 — Generación y cancelación de comisiones
+## DT-05 — Generación de comisiones y cierre mensual
 
-Estado: parcialmente confirmado.
+Estado: resuelto por DT-12.
 
 El Diccionario indica:
 
@@ -96,11 +95,14 @@ Reglas confirmadas para la implementación:
 - Conservar el resultado histórico.
 - Evitar recalcular una comisión pasada usando un porcentaje nuevo.
 
-Pendiente:
+Decisión aplicada:
 
-- Precisar el tratamiento de una cancelación según la etapa.
-- Resolver su relación con las transiciones permitidas.
-- Definir cuándo corresponde conservar, anular o mantener pendiente una comisión.
+- Solo se cancela antes de Entregado.
+- Entregado es terminal y genera una comisión pendiente.
+- La comisión individual es un detalle contable del pedido, no una unidad de pago.
+- `EstadoCuenta` consolida la suma de las comisiones de un emprendimiento por mes.
+- El admin paga el período mensual completo una vez que está cerrado; no existen pagos parciales ni anulaciones.
+- El pago mensual es terminal y actualiza el estado de cuenta y todas sus comisiones en una sola transacción.
 
 No inventar ese comportamiento a partir del nombre de un estado.
 
@@ -108,7 +110,7 @@ Responsables: integrantes 1, 2 y 5.
 
 ## DT-06 — Datos del cliente
 
-Estado: parcialmente definido.
+Estado: resuelto por DT-12.
 
 El Diccionario establece:
 
@@ -117,13 +119,13 @@ El Diccionario establece:
 - Modalidad de entrega.
 - Dirección cuando corresponda.
 
-Correo, notas u otros campos deben justificarse y registrarse antes de ampliar el esquema.
+Se conservan correo y notas como snapshots del pedido, según DT-12.
 
 Responsables: integrantes 2 y 5.
 
 ## DT-07 — Identificación pública y reintentos de pedidos
 
-Estado: pendiente de contrato técnico.
+Estado: resuelto por DT-12.
 
 Los requerimientos exigen:
 
@@ -132,7 +134,7 @@ Los requerimientos exigen:
 - Consulta de estado.
 - Prevención de duplicados ante reenvíos.
 
-Debe definirse:
+Contrato implementado:
 
 - Formato del identificador público.
 - Información que puede exponerse en la consulta pública.
@@ -144,7 +146,7 @@ Responsables: integrantes 2, 3 y 5.
 
 ## DT-08 — Restricciones adicionales
 
-Estado: pendiente de cierre.
+Estado: resuelto por DT-12.
 
 Revisar restricciones para:
 
@@ -195,3 +197,25 @@ Cada nuevo acuerdo debe incluir:
 - Fecha de confirmación.
 
 Mantener trazabilidad cuando una decisión cambie.
+
+## DT-12 — Contratos funcionales de la reconstrucción
+
+Estado: aprobado para la implementación de la rama `feature/reconstruccion-funcional`.
+
+Decisión confirmada el 16 de octubre de 2026:
+
+- Mantener la tabla `users` y los roles `admin`, `emprendedor` y `cliente` mediante un backed Enum.
+- Usar `estado` para bloquear cuentas suspendidas, incluso cuando ya exista una sesión.
+- Permitir como máximo un emprendimiento por usuario emprendedor mediante la restricción única de `emprendimientos.usuario_id`.
+- El registro público crea solamente clientes; los emprendedores son creados por administración junto con su negocio y plan dentro de una transacción.
+- Asociar cada pedido al cliente autenticado y conservar snapshots de sus datos de contacto.
+- Un carrito con varios negocios produce un pedido por emprendimiento dentro de una sola transacción.
+- Aplicar la matriz `Pendiente -> Confirmado/Cancelado`, `Confirmado -> En preparación/Cancelado`, `En preparación -> Listo/Cancelado`, `Listo -> Entregado/Cancelado`; Entregado y Cancelado son terminales.
+- Generar una sola comisión al llegar a Entregado y recalcular su estado de cuenta mensual. Al ser Entregado terminal, no existe una anulación posterior de la comisión.
+- Exigir el snapshot de plan y porcentaje creado en checkout antes de entregar; nunca reconstruirlo con el plan actual.
+- Conservar en el pedido el plan, nombre y porcentaje aplicados para evitar recálculos retroactivos.
+- Mantener UUID y tokens para garantías técnicas e idempotencia; mostrar `Pedido #ID` como referencia visible y proteger cada consulta mediante autenticación y Policies.
+
+Motivo: estas reglas fueron autorizadas expresamente para completar el flujo de los cuatro actores y cerrar los contratos que figuraban como pendientes en DT-03 a DT-08.
+
+Módulos afectados: usuarios, autenticación, emprendimientos, carrito, pedidos, historial, comisiones, migraciones, middleware, Policies y seeders.

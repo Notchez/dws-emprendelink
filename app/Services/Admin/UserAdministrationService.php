@@ -1,14 +1,7 @@
 <?php
-
 namespace App\Services\Admin;
-
+use App\Models\User;
 class UserAdministrationService
 {
-    /**
-     * Create a new class instance.
-     */
-    public function __construct()
-    {
-        //
-    }
+    public function setStatus(User $user,bool $active): User { $user->update(['estado'=>$active]); return $user->refresh(); }
 }

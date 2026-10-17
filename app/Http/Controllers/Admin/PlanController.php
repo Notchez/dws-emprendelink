@@ -3,46 +3,51 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\Admin\StorePlanRequest;
+use App\Http\Requests\Admin\UpdatePlanRequest;
+use App\Http\Requests\Admin\UpdatePlanStatusRequest;
 use App\Models\Plan;
+use App\Services\Admin\PlanManagementService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class PlanController extends Controller
 {
-    // Listar planes disponibles (RF-09)
-    public function index()
+    public function __construct(private PlanManagementService $plans) {}
+
+    public function index(): View
     {
-        $planes = Plan::all();
-        return view('admin.planes.index', compact('planes'));
+        return view('admin.planes.index', ['planes' => Plan::withCount('suscripciones')->orderBy('precio_mensual')->get()]);
     }
 
-    // Mostrar formulario para editar un plan (RF-10)
-    public function edit($id)
+    public function create(): View
     {
-        $plan = Plan::findOrFail($id);
-        return view('admin.planes.edit', compact('plan'));
+        return view('admin.planes.form', ['plan' => new Plan]);
     }
 
-    // Actualizar la información del plan, precios y límites (RF-10)
-    public function update(Request $request, $id)
+    public function store(StorePlanRequest $request): RedirectResponse
     {
-        $request->validate([
-            'nombre' => 'required|string|max:100',
-            'descripcion' => 'nullable|string',
-            'precio_mensual' => 'required|numeric|min:0',
-            'porcentaje_comision' => 'required|numeric|min:0|max:100',
-            'limite_productos' => 'required|integer|min:0',
-        ]);
+        $this->plans->create($request->validated());
 
-        $plan = Plan::findOrFail($id);
-        $plan->update([
-            'nombre' => $request->nombre,
-            'descripcion' => $request->descripcion,
-            'precio_mensual' => $request->precio_mensual,
-            'porcentaje_comision' => $request->porcentaje_comision,
-            'limite_productos' => $request->limite_productos,
-        ]);
+        return redirect()->route('admin.planes.index')->with('success', 'Plan creado.');
+    }
 
-        return redirect()->route('admin.planes.index')
-            ->with('success', 'El plan ha sido actualizado exitosamente.');
+    public function edit(Plan $plan): View
+    {
+        return view('admin.planes.form', compact('plan'));
+    }
+
+    public function update(UpdatePlanRequest $request, Plan $plan): RedirectResponse
+    {
+        $this->plans->update($plan, $request->validated());
+
+        return redirect()->route('admin.planes.index')->with('success', 'Plan actualizado.');
+    }
+
+    public function status(UpdatePlanStatusRequest $request, Plan $plan): RedirectResponse
+    {
+        $this->plans->setStatus($plan, $request->boolean('estado'));
+
+        return back()->with('success', 'Estado del plan actualizado.');
     }
 }

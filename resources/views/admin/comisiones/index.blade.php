@@ -1,102 +1,121 @@
 @extends('layouts.adminlte')
 
+@section('title', 'Cargos mensuales')
+
+@section('content_header')
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+        <div>
+            <h1 class="fw-bold">Cargos mensuales</h1>
+            <p class="text-body-secondary mb-0">
+                Estados de cuenta consolidados por emprendimiento y período.
+            </p>
+        </div>
+
+        <form method="GET" class="d-flex align-items-end gap-2">
+            <div>
+                <label class="form-label" for="mes">Período</label>
+                <input
+                    class="form-control @error('mes') is-invalid @enderror"
+                    id="mes"
+                    name="mes"
+                    type="month"
+                    value="{{ $mes }}"
+                    required
+                >
+                @error('mes')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+            <button class="btn btn-primary">Consultar</button>
+        </form>
+    </div>
+@endsection
+
 @section('content')
-<div class="container-fluid pt-3">
-    <div class="row mb-3">
-        <div class="col-sm-12">
-            <h1 class="m-0 text-dark font-weight-bold">Reportes y Finanzas</h1>
-            <p class="text-muted">Supervisa el flujo de ventas, comisiones globales y pagos pendientes de la plataforma.</p>
-        </div>
-    </div>
+    @include('components.flash')
 
-    <!-- Tarjetas de Resumen (KPIs) -->
-    <div class="row">
-        <div class="col-lg-3 col-6">
-            <div class="small-box bg-info p-3 rounded shadow-sm text-white">
-                <div class="inner">
-                    <h3>${{ number_format($totalVentas, 2) }}</h3>
-                    <p>Ventas Totales</p>
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card metric-card h-100">
+                <div class="card-body">
+                    <p class="text-body-secondary mb-1">Total del período</p>
+                    <strong class="price">${{ number_format($periodTotal, 2) }}</strong>
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-6">
-            <div class="small-box bg-success p-3 rounded shadow-sm text-white">
-                <div class="inner">
-                    <h3>${{ number_format($totalComisiones, 2) }}</h3>
-                    <p>Comisiones Totales</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-6">
-            <div class="small-box bg-warning p-3 rounded shadow-sm text-dark">
-                <div class="inner">
-                    <h3>${{ number_format($comisionesPendientes, 2) }}</h3>
-                    <p>Comisiones Pendientes</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-3 col-6">
-            <div class="small-box bg-primary p-3 rounded shadow-sm text-white">
-                <div class="inner">
-                    <h3>{{ $emprendimientosCount }}</h3>
-                    <p>Emprendimientos Activos</p>
+        <div class="col-md-6">
+            <div class="card metric-card h-100">
+                <div class="card-body">
+                    <p class="text-body-secondary mb-1">Pedidos entregados</p>
+                    <strong class="price">{{ $commissionCount }}</strong>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Tabla Detallada de Comisiones / Auditoría -->
-    <div class="card shadow-sm border-0 mt-4">
-        <div class="card-body">
-            <h5 class="font-weight-bold mb-3 text-dark">Historial de Comisiones</h5>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead>
-                        <tr class="text-muted">
-                            <th>ID</th>
-                            <th>Emprendimiento</th>
-                            <th>Monto Base</th>
-                            <th>Comisión Aplicada</th>
-                            <th>Total Comisión</th>
-                            <th>Estado</th>
-                            <th>Fecha</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($comisiones as $comision)
+    <div class="card orders-surface">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Emprendimiento</th>
+                        <th>Período</th>
+                        <th>Pedidos entregados</th>
+                        <th>Total del mes</th>
+                        <th>Estado</th>
+                        <th>Fecha de pago</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($statements as $statement)
                         <tr>
-                            <td>{{ $comision->id }}</td>
-                            <td class="font-weight-bold">{{ $comision->emprendimiento->nombre ?? 'N/A' }}</td>
-                            <td>${{ number_format($comision->monto_base, 2) }}</td>
-                            <td>{{ $comision->porcentaje_aplicado }}%</td>
-                            <td class="font-weight-bold text-success">${{ number_format($comision->total_comision, 2) }}</td>
+                            <td class="fw-semibold">{{ $statement->emprendimiento->nombre }}</td>
+                            <td>{{ $periodStart->format('m/Y') }}</td>
+                            <td>{{ $statement->commission_count }}</td>
+                            <td>${{ number_format($statement->total_adeudado, 2) }}</td>
                             <td>
-                                @php
-                                    $badgeColor = 'bg-secondary';
-                                    if ($comision->estado == 'pagada') $badgeColor = 'bg-success';
-                                    elseif ($comision->estado == 'pendiente') $badgeColor = 'bg-warning text-dark';
-                                    elseif ($comision->estado == 'anulada') $badgeColor = 'bg-danger';
-                                @endphp
-                                <span class="badge {{ $badgeColor }} px-3 py-1">
-                                    {{ ucfirst($comision->estado) }}
-                                </span>
+                                @if(! $periodClosed)
+                                    <span class="badge text-bg-info">Mes en curso</span>
+                                @elseif($statement->estado_pago === \App\Enums\AccountStatementStatus::PAGADO)
+                                    <span class="badge text-bg-success">Pagado</span>
+                                @else
+                                    <span class="badge text-bg-warning">Pendiente</span>
+                                @endif
                             </td>
-                            <td>{{ $comision->created_at ? $comision->created_at->format('d/m/Y H:i') : 'N/A' }}</td>
+                            <td>{{ $statement->fecha_pago?->format('d/m/Y H:i') ?? '—' }}</td>
+                            <td>
+                                @if($periodClosed
+                                    && $statement->estado_pago === \App\Enums\AccountStatementStatus::PENDIENTE
+                                    && (float) $statement->total_adeudado > 0)
+                                    @can('pay', $statement)
+                                        <form
+                                            method="POST"
+                                            action="{{ route('admin.account-statements.pay', $statement) }}"
+                                        >
+                                            @csrf
+                                            @method('PATCH')
+                                            <button class="btn btn-sm btn-success">
+                                                Marcar mes como pagado
+                                            </button>
+                                        </form>
+                                    @endcan
+                                @else
+                                    <span class="text-body-secondary">Sin acciones</span>
+                                @endif
+                            </td>
                         </tr>
-                        @empty
+                    @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-4">No hay registros de comisiones disponibles.</td>
+                            <td colspan="7" class="empty-state">
+                                No hay cargos para el período seleccionado.
+                            </td>
                         </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Paginación -->
-            <div class="d-flex justify-content-end mt-3">
-                {{ $comisiones->links() }}
-            </div>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
-</div>
+
+    <div class="mt-3">{{ $statements->links() }}</div>
 @endsection

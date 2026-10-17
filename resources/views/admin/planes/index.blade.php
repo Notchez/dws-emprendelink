@@ -1,52 +1,57 @@
 @extends('layouts.adminlte')
 
+@section('title', 'Planes')
+
+@section('content_header')
+    <div class="d-flex justify-content-between gap-3">
+        <div>
+            <h1 class="fw-bold">Planes</h1>
+            <p class="text-body-secondary">Desactivar un plan no altera suscripciones, pedidos ni comisiones existentes.</p>
+        </div>
+        <a class="btn btn-primary align-self-start" href="{{ route('admin.planes.create') }}">Nuevo plan</a>
+    </div>
+@endsection
+
 @section('content')
-<div class="container-fluid pt-3">
-    <div class="row mb-3">
-        <div class="col-sm-12">
-            <h1 class="m-0 text-dark font-weight-bold">Gestión de Planes</h1>
-            <p class="text-muted">Administra los precios, comisiones y límites de productos de cada plan (RF-09, RF-10).</p>
-        </div>
-    </div>
+    @include('components.flash')
 
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    <div class="card shadow-sm border-0">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead>
-                        <tr class="text-muted">
-                            <th>Plan</th>
-                            <th>Descripción</th>
-                            <th>Precio Mensual</th>
-                            <th>Comisión (%)</th>
-                            <th>Límite Productos</th>
-                            <th class="text-center">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($planes as $plan)
-                        <tr>
-                            <td class="font-weight-bold">{{ $plan->nombre }}</td>
-                            <td>{{ $plan->descripcion ?? 'N/A' }}</td>
-                            <td>${{ number_format($plan->precio_mensual, 2) }}</td>
-                            <td>{{ $plan->porcentaje_comision }}%</td>
-                            <td>{{ $plan->limite_productos == 0 ? 'Ilimitados' : $plan->limite_productos }}</td>
-                            <td class="text-center">
-                                <a href="{{ route('admin.planes.edit', $plan->id) }}" class="btn btn-sm btn-outline-primary px-3">Editar</a>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+    <div class="row g-3">
+        @forelse($planes as $plan)
+            <div class="col-md-6 col-xl-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between gap-2">
+                            <h2 class="h5 fw-bold">{{ $plan->nombre }}</h2>
+                            <span class="badge {{ $plan->estado ? 'text-bg-success' : 'text-bg-secondary' }} align-self-start">
+                                {{ $plan->estado ? 'Activo' : 'Inactivo' }}
+                            </span>
+                        </div>
+                        <p class="price">
+                            ${{ number_format($plan->precio_mensual, 2) }}
+                            <small class="text-body-secondary fs-6">/mes</small>
+                        </p>
+                        <p>{{ $plan->descripcion }}</p>
+                        <ul class="text-body-secondary">
+                            <li>{{ number_format($plan->porcentaje_comision, 2) }}% de comisión</li>
+                            <li>{{ $plan->limite_productos }} productos activos</li>
+                            <li>{{ $plan->suscripciones_count }} suscripciones</li>
+                        </ul>
+                    </div>
+                    <div class="card-footer bg-white d-flex justify-content-between align-items-center gap-2">
+                        <a href="{{ route('admin.planes.edit', $plan) }}">Editar plan</a>
+                        <form method="POST" action="{{ route('admin.planes.status', $plan) }}">
+                            @csrf
+                            @method('PATCH')
+                            <input type="hidden" name="estado" value="{{ $plan->estado ? 0 : 1 }}">
+                            <button class="btn btn-sm {{ $plan->estado ? 'btn-outline-danger' : 'btn-outline-primary' }}">
+                                {{ $plan->estado ? 'Desactivar' : 'Activar' }}
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
-        </div>
+        @empty
+            <div class="col-12 empty-state">No hay planes.</div>
+        @endforelse
     </div>
-</div>
 @endsection
