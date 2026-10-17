@@ -48,13 +48,13 @@ Son datos locales; no deben utilizarse en producción.
 
 ## Pruebas
 
-La suite usa `dws_emprendelink_test`, definida de forma forzada en `phpunit.xml`, para impedir que `RefreshDatabase` opere sobre la base de desarrollo. Cree esa base vacía y conceda al usuario configurado permisos sobre ella. La conexión toma host, puerto, usuario y contraseña del entorno, pero reemplaza el nombre de base durante PHPUnit.
+La suite usa `dws_emprendelink_test` como valor local predeterminado en `phpunit.xml`, para impedir que `RefreshDatabase` opere sobre la base de desarrollo. Cree esa base vacía y conceda al usuario configurado permisos sobre ella. Las variables de entorno explícitas tienen prioridad, por lo que CI utiliza su base aislada `emprendelink_testing`.
 
 ```bash
 php artisan test
 ```
 
-Nunca apunte la configuración de testing a la base normal. Las pruebas cubren autenticación, roles, propiedad de recursos, catálogo, carrito, checkout transaccional e idempotente, pedidos, comisiones, administración e imágenes.
+Nunca apunte la configuración de testing a la base normal. La clase base de pruebas rechaza nombres que no terminen en `_test` o `_testing`. Las pruebas cubren autenticación, roles, propiedad de recursos, catálogo, carrito, checkout transaccional e idempotente, pedidos, comisiones, administración e imágenes.
 
 ## Estructura
 

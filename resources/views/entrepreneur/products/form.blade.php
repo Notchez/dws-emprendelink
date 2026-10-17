@@ -38,15 +38,20 @@
                 </div>
 
                 <div class="col-md-6">
-                    <label class="form-label" for="imagen">Imagen</label>
+                    <span class="form-label d-block">Imagen</span>
                     <input
-                        class="form-control"
+                        class="visually-hidden"
                         id="imagen"
                         name="imagen"
                         type="file"
                         accept="image/png,image/jpeg,image/webp"
                         data-image-preview-target="#product-image-preview"
+                        data-file-name-target="#product-image-file-name"
                     >
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <label class="btn btn-outline-primary mb-0" for="imagen">Seleccionar imagen</label>
+                        <span id="product-image-file-name" class="text-body-secondary" aria-live="polite">Ningún archivo seleccionado</span>
+                    </div>
                     <div class="form-text">JPG, PNG o WebP. Máximo 2 MB.</div>
                 </div>
 

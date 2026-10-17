@@ -1,10 +1,11 @@
 <?php
+
 namespace App\Services\Emprendedor;
 
 use App\Models\Emprendimiento;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use RuntimeException;
 use Throwable;
 
@@ -12,7 +13,7 @@ class BusinessProfileService
 {
     public function update(Emprendimiento $business, array $data, ?UploadedFile $logo = null): Emprendimiento
     {
-        $data['slug'] = $business->nombre === $data['nombre'] ? $business->slug : Str::slug($data['nombre']).'-'.$business->id;
+        $data = Arr::only($data, ['descripcion', 'telefono_contacto']);
 
         $previousLogo = $business->logo_url;
         $newLogo = $logo ? Storage::disk('public')->putFile('emprendimientos', $logo) : null;

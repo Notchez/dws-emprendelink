@@ -18,7 +18,8 @@
 
                     <div class="mb-3">
                         <label class="form-label" for="nombre">Nombre</label>
-                        <input class="form-control" id="nombre" name="nombre" value="{{ old('nombre', $emprendimiento->nombre) }}" required>
+                        <input class="form-control" id="nombre" value="{{ $emprendimiento->nombre }}" readonly aria-readonly="true">
+                        <div class="form-text">El nombre comercial es administrado por EmprendeLink.</div>
                     </div>
 
                     <div class="mb-3">
@@ -32,15 +33,20 @@
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label" for="logo">Logo</label>
+                        <span class="form-label d-block">Logo</span>
                         <input
-                            class="form-control"
+                            class="visually-hidden"
                             id="logo"
                             name="logo"
                             type="file"
                             accept="image/png,image/jpeg,image/webp"
                             data-image-preview-target="#business-logo-preview"
+                            data-file-name-target="#business-logo-file-name"
                         >
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <label class="btn btn-outline-primary mb-0" for="logo">Seleccionar imagen</label>
+                            <span id="business-logo-file-name" class="text-body-secondary" aria-live="polite">Ningún archivo seleccionado</span>
+                        </div>
                         <div class="form-text">JPG, PNG o WebP. Máximo 2 MB.</div>
                         <img
                             id="business-logo-preview"

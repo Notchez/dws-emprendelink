@@ -5,11 +5,13 @@ namespace App\Services\Auth;
 use App\Enums\UserRole;
 use App\Models\Plan;
 use App\Models\User;
+use App\Services\BusinessSlugService;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class EmprendedorRegistrationService
 {
+    public function __construct(private BusinessSlugService $slugs) {}
+
     public function register(array $data): User
     {
         return DB::transaction(function () use ($data) {
@@ -20,12 +22,13 @@ class EmprendedorRegistrationService
             ]);
             $business = $user->emprendimiento()->create([
                 'nombre' => $data['nombre_emprendimiento'],
-                'slug' => Str::slug($data['nombre_emprendimiento']).'-'.Str::lower(Str::random(5)),
+                'slug' => $this->slugs->generate($data['nombre_emprendimiento'], $user->id),
                 'descripcion' => $data['descripcion'] ?? null,
-                'telefono_contacto' => $data['telefono'] ?? null,
+                'telefono_contacto' => ($data['telefono_contacto'] ?? null) ?: ($data['telefono'] ?? null),
                 'estado' => true,
             ]);
             $business->suscripciones()->create(['plan_id' => $plan->id, 'fecha_inicio' => today(), 'estado' => 'activa']);
+
             return $user->load('emprendimiento.suscripcionActiva.plan');
         });
     }

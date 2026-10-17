@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\UserRole;
 use App\Models\Categoria;
 use App\Models\Pedido;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -27,6 +26,36 @@ class CartCheckoutTest extends TestCase
         $this->assertArrayNotHasKey($product->id, session('cart'));
         $this->post(route('cart.store', $product), ['cantidad' => 1]);
         $this->delete(route('cart.clear'));
+        $this->assertNull(session('cart'));
+    }
+
+    public function test_cart_json_update_changes_session_and_returns_server_totals(): void
+    {
+        $customer = $this->user();
+        $business = $this->business();
+        $first = $this->product($business, ['precio' => 25]);
+        $second = $this->product($business, ['precio' => 10]);
+
+        $this->actingAs($customer)->post(route('cart.store', $first), ['cantidad' => 2]);
+        $this->post(route('cart.store', $second), ['cantidad' => 1]);
+
+        $this->patchJson(route('cart.update', $first), ['cantidad' => 4])
+            ->assertOk()
+            ->assertJson([
+                'quantity' => 4,
+                'line_subtotal' => 100,
+                'cart_total' => 110,
+            ])
+            ->assertSessionHas('cart.'.$first->id, 4);
+    }
+
+    public function test_cart_patch_cannot_introduce_a_product_that_is_not_in_session(): void
+    {
+        $customer = $this->user();
+        $product = $this->product($this->business());
+
+        $this->actingAs($customer)->patchJson(route('cart.update', $product), ['cantidad' => 4])
+            ->assertNotFound();
         $this->assertNull(session('cart'));
     }
 

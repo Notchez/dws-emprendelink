@@ -1,6 +1,6 @@
 # Matriz de pruebas
 
-La suite usa MySQL en `dws_emprendelink_test`; `phpunit.xml` fuerza ese nombre para aislarla de desarrollo.
+La suite usa MySQL en `dws_emprendelink_test` por defecto. PHPUnit respeta una variable externa `DB_DATABASE`, por lo que CI utiliza `emprendelink_testing`; ambos nombres pasan la protección de la clase base y la base normal es rechazada.
 
 | Archivo | Cobertura real |
 | --- | --- |
@@ -8,8 +8,8 @@ La suite usa MySQL en `dws_emprendelink_test`; `phpunit.xml` fuerza ese nombre p
 | `tests/Feature/AuthenticationAuthorizationTest.php` | Registro de cliente, login válido/inválido, redirección por rol, cuenta suspendida, logout, middleware y acceso cruzado a pedidos |
 | `tests/Feature/CatalogProfileOwnershipTest.php` | Visibilidad del catálogo, filtro por negocio, protección de perfil, CRUD/ownership de categorías y negocio, MIME inválido y acceso al carrito |
 | `tests/Feature/CartCheckoutTest.php` | Operaciones del carrito, disponibilidad, varios negocios, snapshots del usuario, precio/subtotal servidor, detalles, dirección, idempotencia y rollback |
-| `tests/Feature/OrderCommissionTest.php` | Flujo y cancelaciones válidas, saltos inválidos, terminales, historial, comisión única, estados y permisos administrativos |
-| `tests/Feature/AdministrationAndMediaTest.php` | Alta de emprendedor, plan activo, suspensión de usuario, consultas admin, cambio de plan, límite de productos, reemplazo y conservación de archivos |
+| `tests/Feature/OrderCommissionTest.php` | Flujo y cancelaciones válidas, mensajes terminales, historial, snapshot obligatorio, comisión única, resumen mensual y permisos administrativos |
+| `tests/Feature/AdministrationAndMediaTest.php` | Separación cuenta/negocio, alta de emprendedor, estado y cambio de plan, slugs, límites, suspensión, consultas admin y reemplazo de archivos |
 | `tests/Feature/DatabaseIntegrityTest.php` | Claves foráneas, negocio único por usuario, comisión única y FK de categoría |
 
 Comando:

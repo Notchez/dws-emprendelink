@@ -21,5 +21,6 @@ Reglas relevantes:
 - El registro público ignora campos ajenos al contrato y siempre crea un cliente activo.
 - Un cliente solo puede abrir pedidos asociados a su `cliente_id`.
 - Un emprendedor solo puede modificar recursos cuyo emprendimiento le pertenece.
+- El nombre, slug, plan y estado administrativo del emprendimiento son controlados por el admin; el emprendedor edita descripción, contacto y logo.
 - El admin no puede suspender su propia cuenta desde el endpoint administrativo.
 - Una comisión pagada o anulada es terminal; el emprendedor carece de endpoint de actualización.

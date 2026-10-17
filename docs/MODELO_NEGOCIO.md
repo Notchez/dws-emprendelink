@@ -41,4 +41,4 @@ La comisión se crea una sola vez cuando el pedido llega a `Entregado`:
 total_comision = monto_base * porcentaje_aplicado / 100
 ```
 
-El registro conserva monto base y porcentaje históricos. Su estado inicia `pendiente`; únicamente el admin puede pasarla a `pagada` o `anulada`. Al pagar se registra `pagada_at`. Ambos estados finales son terminales. El emprendedor solo consulta las comisiones de su negocio.
+El registro conserva monto base y porcentaje históricos. Su estado inicia `pendiente`; únicamente el admin puede pasarla a `pagada` o `anulada`. Al pagar se registra `pagada_at`. Ambos estados finales son terminales. El emprendedor consulta los cargos agrupados por el mes de creación de la comisión, sin controles administrativos de estado.

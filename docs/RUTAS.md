@@ -38,7 +38,7 @@ Prefijo `/admin`, nombre `admin.*`, middleware `auth`, `active` y `role:admin`.
 
 - Dashboard, usuarios y creación de emprendedor.
 - Emprendimientos y asignación de plan.
-- CRUD de planes sin borrado físico.
+- CRUD de planes sin borrado físico y endpoint dedicado de activación/desactivación.
 - Consulta global de pedidos.
 - Consulta y transición terminal de comisiones.
 
