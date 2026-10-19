@@ -1,252 +1,98 @@
 # EmprendeLink
 
-Plataforma web orientada a facilitar la gestión y comercialización de productos ofrecidos por emprendedores, conectándolos con clientes interesados mediante un entorno organizado, accesible y confiable.
+EmprendeLink es una plataforma académica de DWS901 para que emprendimientos publiquen productos, administren pedidos y consulten ventas y comisiones. El catálogo es público; el carrito, checkout y seguimiento de pedidos requieren una cuenta de cliente.
 
-Este proyecto se desarrolla para la asignatura **DWS901 - Desarrollo de Aplicaciones Web con Software Interpretado en el Servidor** de la Universidad Don Bosco.
+## Tecnología
 
-## Estado del proyecto
-
-El proyecto se encuentra en la **Fase 1: Descubrimiento y Arquitectura del Sistema (Sprint I)**.
-
-En esta etapa se ha preparado la base técnica inicial:
-
-- Proyecto creado con Laravel 12.
-- Arquitectura inicial basada en el patrón MVC.
-- Repositorio Git configurado en GitHub.
-- Ramas `main` y `develop` establecidas.
-- Variables sensibles excluidas del control de versiones.
-- Compatibilidad verificada con PHP 8.5.
-- Pruebas iniciales ejecutadas correctamente.
-- Auditoría de dependencias sin vulnerabilidades conocidas.
-
-La lógica funcional completa, los módulos del sistema y la persistencia definitiva en MySQL se desarrollarán progresivamente en las siguientes fases.
-
-## Objetivo general
-
-Desarrollar una plataforma web que permita a los emprendedores administrar y publicar sus productos, mientras los clientes pueden consultar la oferta disponible y realizar pedidos mediante una experiencia clara y organizada.
-
-## Usuarios principales
-
-- **Administrador:** supervisará usuarios, publicaciones, pedidos y funcionamiento general de la plataforma.
-- **Emprendedor:** gestionará su perfil, productos, inventario y pedidos recibidos.
-- **Cliente:** consultará productos, preparará pedidos y dará seguimiento a sus solicitudes.
-
-## Tecnologías
-
-| Componente               | Tecnología               |
-| ------------------------ | ------------------------ |
-| Lenguaje del servidor    | PHP 8.5                  |
-| Framework principal      | Laravel 12               |
-| Arquitectura             | MVC                      |
-| Motor de plantillas      | Blade                    |
-| Persistencia prevista    | MySQL                    |
-| Desarrollo local inicial | SQLite                   |
-| Frontend                 | HTML5, CSS3 y JavaScript |
-| Gestión de recursos      | Vite y npm               |
-| Pruebas                  | PHPUnit                  |
-| Control de versiones     | Git                      |
-| Repositorio remoto       | GitHub                   |
-
-## Arquitectura inicial
-
-EmprendeLink utilizará el patrón **Modelo-Vista-Controlador (MVC)** proporcionado por Laravel.
-
-```mermaid
-flowchart TD
-    A["Cliente web"] --> B["Rutas"]
-    B --> C["Controladores"]
-    C --> D["Modelos Eloquent"]
-    D --> E[("Base de datos")]
-    C --> F["Vistas Blade"]
-    F --> A
-```
-
-- **Modelos:** representan las entidades y gestionan el acceso a los datos mediante Eloquent.
-- **Vistas:** presentan la interfaz al usuario mediante plantillas Blade.
-- **Controladores:** procesan solicitudes y coordinan la comunicación entre modelos y vistas.
-- **Rutas:** determinan qué controlador debe atender cada solicitud HTTP.
-- **Base de datos:** almacenará usuarios, productos, pedidos y demás información del sistema.
-
-## Estructura principal
-
-| Ruta           | Responsabilidad                                      |
-| -------------- | ---------------------------------------------------- |
-| `app/`         | Lógica principal, modelos, controladores y servicios |
-| `bootstrap/`   | Inicialización del framework                         |
-| `config/`      | Configuración de la aplicación                       |
-| `database/`    | Migraciones, fábricas y seeders                      |
-| `public/`      | Punto de entrada y recursos públicos                 |
-| `resources/`   | Vistas, estilos y archivos JavaScript                |
-| `routes/`      | Definición de rutas web y comandos                   |
-| `storage/`     | Archivos generados, sesiones, caché y registros      |
-| `tests/`       | Pruebas automatizadas                                |
-| `.env.example` | Plantilla de variables de entorno                    |
+- PHP 8.2 o superior (entorno objetivo: PHP 8.5) y Laravel 12.
+- MySQL 8, Eloquent, Blade, Form Requests, Services y Policies.
+- Bootstrap 5, AdminLTE 4, Bootstrap Icons, Inter y Vite.
+- PHPUnit 11 sobre una base MySQL de pruebas aislada.
 
 ## Requisitos
 
-Para ejecutar el proyecto localmente se necesita:
-
-- PHP 8.2 o superior.
-- Composer 2.x.
-- Node.js y npm.
-- Git.
-- SQLite para las pruebas iniciales o MySQL para la persistencia definitiva.
+PHP con PDO MySQL, Mbstring, OpenSSL, XML, Ctype, Fileinfo y Tokenizer; Composer 2; MySQL 8; Node.js/npm; y Git.
 
 ## Instalación local
 
-### 1. Clonar el repositorio
-
-```bash
-git clone https://github.com/Notchez/dws-emprendelink.git
-cd dws-emprendelink
-```
-
-### 2. Instalar las dependencias de PHP
-
 ```bash
 composer install
-```
-
-### 3. Crear el archivo de entorno
-
-En Windows PowerShell:
-
-```powershell
-Copy-Item .env.example .env
-```
-
-En Linux:
-
-```bash
-cp .env.example .env
-```
-
-### 4. Generar la clave de la aplicación
-
-```bash
+copy .env.example .env
 php artisan key:generate
-```
-
-### 5. Preparar SQLite para el entorno inicial
-
-En Windows PowerShell:
-
-```powershell
-New-Item -ItemType File database/database.sqlite -Force
-php artisan migrate
-```
-
-En Linux:
-
-```bash
-touch database/database.sqlite
-php artisan migrate
-```
-
-La configuración será actualizada para utilizar MySQL cuando se implemente el modelo de datos definitivo del proyecto.
-
-### 6. Instalar los recursos del frontend
-
-```bash
 npm install
-npm run dev
 ```
 
-### 7. Iniciar la aplicación
-
-En otra terminal:
+Configure en `.env` la conexión MySQL (`DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME` y `DB_PASSWORD`) y después ejecute:
 
 ```bash
+php artisan migrate
+php artisan db:seed
+php artisan storage:link
+npm run build
 php artisan serve
 ```
 
-La aplicación estará disponible normalmente en:
+Para desarrollo con recarga de recursos, use `npm run dev` en otra terminal. Las imágenes se guardan en `storage/app/public` y la base conserva únicamente su ruta relativa.
 
-```text
-http://127.0.0.1:8000
-```
+## Datos de demostración
 
-## Pruebas y seguridad
+`php artisan db:seed` crea usuarios de demostración con contraseña `password`:
 
-Ejecutar las pruebas automatizadas:
+| Rol | Correo |
+| --- | --- |
+| Administrador | `admin@emprendelink.test` |
+| Emprendedor | `emprendedor@emprendelink.test` |
+| Cliente | `cliente@emprendelink.test` |
+
+Son datos locales; no deben utilizarse en producción.
+
+## Pruebas
+
+La suite usa `dws_emprendelink_test` como valor local predeterminado en `phpunit.xml`, para impedir que `RefreshDatabase` opere sobre la base de desarrollo. Cree esa base vacía y conceda al usuario configurado permisos sobre ella. Las variables de entorno explícitas tienen prioridad, por lo que CI utiliza su base aislada `emprendelink_testing`.
 
 ```bash
 php artisan test
 ```
 
-Comprobar las dependencias:
+Nunca apunte la configuración de testing a la base normal. La clase base de pruebas rechaza nombres que no terminen en `_test` o `_testing`. Las pruebas cubren autenticación, roles, propiedad de recursos, catálogo, carrito, checkout transaccional e idempotente, pedidos, comisiones, administración e imágenes.
+
+## Estructura
+
+| Ubicación | Responsabilidad |
+| --- | --- |
+| `routes/` | Endpoints públicos, de autenticación, admin y emprendedor |
+| `app/Http/Controllers` | Coordinación HTTP |
+| `app/Http/Requests` | Validación y autorización de entradas |
+| `app/Http/Middleware` | Sesión activa y control de roles |
+| `app/Policies` | Propiedad y permisos sobre recursos |
+| `app/Services` | Transacciones y reglas de negocio |
+| `app/Models` y `app/Enums` | Modelo Eloquent y estados del dominio |
+| `resources/views` | Interfaz Blade responsive |
+| `resources/css/adminlte.css` | Estilos compartidos de EmprendeLink |
+| `database/` | Migraciones, factories y seeders |
+| `tests/` | Pruebas unitarias y funcionales |
+
+## Verificación
 
 ```bash
-composer audit
+composer dump-autoload
+php artisan optimize:clear
+php artisan route:list
+php artisan migrate:status
+php artisan test
+npm run build
 ```
 
-Nunca deben subirse al repositorio:
+## Documentación
 
-- El archivo `.env`.
-- Credenciales o claves privadas.
-- La carpeta `vendor`.
-- La carpeta `node_modules`.
-- Bases de datos SQLite locales.
-- Archivos temporales, registros o caché.
+- [Arquitectura](docs/ARQUITECTURA.md)
+- [Roles y permisos](docs/ROLES_PERMISOS.md)
+- [Rutas](docs/RUTAS.md)
+- [Modelo de negocio](docs/MODELO_NEGOCIO.md)
+- [Matriz de pruebas](docs/MATRIZ_PRUEBAS.md)
+- [Decisiones técnicas](docs/DECISIONES_TECNICAS.md)
+- [Instalación local ampliada](docs/INSTALACION_LOCAL.md)
 
-## Estrategia Git
+## Alcance
 
-El repositorio utiliza las siguientes ramas:
-
-- `main`: contiene únicamente versiones estables.
-- `develop`: integra el trabajo preparado para el siguiente incremento.
-- `feature/nombre-funcionalidad`: se utilizará para desarrollar funcionalidades específicas.
-
-Flujo de trabajo recomendado:
-
-1. Actualizar la rama `develop`.
-2. Crear una rama `feature` desde `develop`.
-3. Realizar y comprobar los cambios.
-4. Crear commits claros y específicos.
-5. Subir la rama a GitHub.
-6. Abrir un Pull Request hacia `develop`.
-7. Integrar `develop` en `main` cuando el incremento sea estable.
-
-## Convención de commits
-
-El proyecto adopta la especificación **Conventional Commits** para mantener un historial claro, uniforme y fácil de interpretar.
-
-Los mensajes utilizarán la siguiente estructura:
-
-```text
-tipo(alcance opcional): descripción breve
-```
-
-Los identificadores del tipo y el alcance se escribirán en inglés, mientras que la descripción del cambio se redactará en español.
-
-### Tipos permitidos
-
-- `feat`: incorporación de una nueva funcionalidad.
-- `fix`: corrección de un error.
-- `docs`: cambios realizados únicamente en la documentación.
-- `test`: creación o modificación de pruebas.
-- `refactor`: reorganización del código sin modificar su comportamiento.
-- `ci`: cambios en GitHub Actions o en procesos de integración continua.
-- `chore`: configuración, dependencias y tareas de mantenimiento.
-- `style`: cambios de formato que no alteran la lógica del sistema.
-
-### Ejemplos
-
-```text
-feat(pedidos): agregar registro de pedidos
-fix(auth): corregir redirección después del inicio de sesión
-docs(readme): actualizar instrucciones de instalación
-test(pedidos): agregar pruebas para la creación de pedidos
-ci(actions): ejecutar pruebas automáticas de Laravel
-chore(gitignore): ignorar archivos temporales del servidor de lenguaje
-```
-
-Cada commit debe representar un cambio concreto. La descripción debe ser breve, comenzar en minúscula y no terminar con punto.
-
-## Repositorio
-
-[Notchez/dws-emprendelink](https://github.com/Notchez/dws-emprendelink)
-
-## Uso académico
-
-EmprendeLink es un proyecto académico desarrollado para DWS901. Actualmente no cuenta con una licencia pública de distribución.
+La Fase 2 incluye catálogo, cuentas y roles, perfiles, negocios, planes, categorías, productos, carrito, checkout, pedidos, historial, ventas y comisiones. No incluye pagos en línea, facturación fiscal, chat, aplicación móvil nativa ni exportaciones avanzadas.

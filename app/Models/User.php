@@ -2,47 +2,39 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\UserRole;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+    protected $fillable = ['name', 'email', 'password', 'rol', 'estado', 'telefono', 'direccion'];
+    protected $hidden = ['password', 'remember_token'];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
-
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'rol' => UserRole::class,
+            'estado' => 'boolean',
         ];
     }
+
+    public function emprendimiento(): HasOne { return $this->hasOne(Emprendimiento::class, 'usuario_id'); }
+    public function pedidos(): HasMany { return $this->hasMany(Pedido::class, 'cliente_id'); }
+
+    public function hasRole(UserRole|string ...$roles): bool
+    {
+        $current = $this->rol instanceof UserRole ? $this->rol->value : $this->rol;
+        return collect($roles)->contains(fn (UserRole|string $role) => ($role instanceof UserRole ? $role->value : $role) === $current);
+    }
+
+    public function isActive(): bool { return $this->estado === true; }
 }
