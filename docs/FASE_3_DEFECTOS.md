@@ -1,30 +1,117 @@
-# EmprendeLink — Registro de observaciones y defectos (Sprint III)
+# EmprendeLink — Registro de observaciones y defectos
 
-> Plantilla inicial; las filas de ejemplo **no son defectos detectados**. Registrar aquí las observaciones reales del Sprint II y fallos reproducidos durante integración. Mantener enlace al Product Backlog y PR de corrección.
+**Materia:** DWS901
+**Fase:** 3 — Sprint III
+**Proyecto:** EmprendeLink
+**Product Backlog:** Trello
 
-## Estados y prioridades
+## 1. Objetivo
 
-- **Estado:** Nuevo / Confirmado / En progreso / En revisión / Resuelto / Cerrado / No reproducible.
-- **Prioridad P0:** detiene flujos críticos, pérdida/corrupción de datos o acceso no autorizado.
-- **Prioridad P1:** fallo funcional relevante con alternativa limitada.
-- **Prioridad P2:** problema visual, usabilidad o mejora no bloqueante.
+Registrar errores reales y observaciones recibidas durante el desarrollo, integración y pruebas de Fase 3.
 
-| ID | Origen | Módulo | Descripción y pasos | Prioridad | Responsable | Estado | Requisito/Backlog | PR/commit | Evidencia |
-|---|---|---|---|---|---|---|---|---|---|
-| — | Sprint II / QA | — | Pendiente de registrar observaciones reales | — | — | — | — | — | — |
+Cada defecto debe relacionarse con la funcionalidad afectada y su corrección.
 
-## Criterio de cierre de defectos
+No se registrarán defectos inventados.
 
-1. Reproducir el problema y anotar datos/entorno.
-2. Corregir mediante PR identificado.
-3. Ejecutar el caso que fallaba y casos de regresión relacionados.
-4. Adjuntar evidencia antes/después y actualizar el estado.
-5. No declarar solucionado hasta validación de otra persona o revisión trazable.
+## 2. Prioridades
 
-## Observaciones de Sprint II
+### P0 — Crítico
 
-**Pendiente:** transcribir literalmente las observaciones oficiales recibidas, identificar origen/fecha y mapearlas a historias y defectos.
+- Pérdida o corrupción de datos.
+- Acceso no autorizado.
+- Fallo en un proceso esencial.
+- Problema que bloquea la Release Candidate.
 
-## Pendientes para Sprint IV
+### P1 — Alto
 
-No agregar elementos aquí hasta comprobar que no son bloqueantes para la Release Candidate y documentar su justificación.
+- Error importante en una funcionalidad.
+- Cálculos incorrectos.
+- Fallos que afectan significativamente el uso del sistema.
+
+### P2 — Medio o bajo
+
+- Defectos visuales menores.
+- Problemas de usabilidad.
+- Mejoras no críticas.
+
+## 3. Estados
+
+- Nuevo.
+- Confirmado.
+- En progreso.
+- Resuelto.
+- Cerrado.
+- No reproducible.
+
+## 4. Registro de defectos
+
+| ID  | Historia Trello | Módulo | Descripción                      | Prioridad | Responsable | Estado | PR/commit | Evidencia |
+| --- | --------------- | ------ | -------------------------------- | --------- | ----------- | ------ | --------- | --------- |
+| —   | —               | —      | Sin defectos registrados todavía | —         | —           | —      | —         | —         |
+
+Los identificadores utilizarán el formato:
+
+DEF-001, DEF-002, DEF-003, etc.
+
+## 5. Registro de un defecto
+
+Cada defecto debe indicar:
+
+1. Qué sucede.
+2. Qué debería suceder.
+3. Cómo reproducirlo.
+4. Qué datos se utilizaron.
+5. Qué módulo está afectado.
+6. Qué historia corresponde.
+7. Qué prioridad tiene.
+8. Quién realizará la corrección.
+9. Qué cambio resolvió el problema.
+10. Qué evidencia confirma la solución.
+
+## 6. Proceso de corrección
+
+1. Identificar el problema.
+2. Reproducirlo.
+3. Registrar la incidencia.
+4. Relacionarla con Trello.
+5. Asignar prioridad y responsable.
+6. Implementar la corrección.
+7. Ejecutar nuevamente la prueba.
+8. Comprobar que no se afectaron otros módulos.
+9. Guardar evidencia.
+10. Actualizar el estado del defecto.
+
+No se exige aprobación manual obligatoria de otro integrante para cada PR.
+
+Se mantienen los controles automáticos de GitHub Actions.
+
+## 7. Observaciones del docente — Fase 2
+
+Estado: pendiente de confirmar.
+
+Cuando existan observaciones oficiales, registrar:
+
+- Comentario recibido.
+- Módulo relacionado.
+- Historia afectada.
+- Acción correctiva.
+- Responsable.
+- Evidencia de solución.
+
+No se deben inventar observaciones del docente.
+
+## 8. Cierre de un defecto
+
+- [ ] Problema identificado.
+- [ ] Pasos de reproducción registrados.
+- [ ] Corrección implementada.
+- [ ] Prueba repetida satisfactoriamente.
+- [ ] Sin regresiones conocidas.
+- [ ] Evidencia disponible.
+- [ ] Estado actualizado.
+
+## 9. Pendientes para Sprint IV
+
+Los defectos no críticos que queden pendientes podrán registrarse aquí con una justificación y referencia a Trello.
+
+Ningún defecto P0 podrá considerarse un pendiente aceptable de la Release Candidate.
