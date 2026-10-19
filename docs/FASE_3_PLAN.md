@@ -1,82 +1,327 @@
 ﻿# EmprendeLink — Fase 3: Integración Full Stack y Release Candidate
 
-**Materia:** DWS901  
-**Entrega objetivo:** 8 de noviembre de 2026 (la ruta indica 7 u 8)  
-**Ponderación:** 25%  
-**Fuente de verdad:** Ruta de Aprendizaje DWS901, pp. 18–23, Documento Maestro y Product Backlog aprobado.  
-**Rama base:** `develop`  
-**Estado inicial (19-10-2026):** Fase 2 reconstruida y fusionada a `develop` (`bf083902`), con CI satisfactorio en ese commit.
+**Materia:** DWS901
+**Proyecto:** EmprendeLink
+**Entrega objetivo:** 8 de noviembre de 2026
+**Ponderación:** 25%
+**Repositorio:** https://github.com/Notchez/dws-emprendelink
+**Rama base:** develop
+**Product Backlog:** Trello — EmprendeLink Scrum Backlog
 
-## Objetivo
+## 1. Objetivo
 
-Entregar un sistema Full Stack completamente integrado entre vistas Blade/AdminLTE, Laravel 12 y MySQL; con autenticación y roles, módulos y flujos completos, archivos, validaciones, reportes, gráficos, exportación y pruebas de integración. Identificar un Release Candidate reproducible en el repositorio.
+Completar la integración Full Stack de EmprendeLink utilizando Laravel 12, Blade, AdminLTE y MySQL.
 
-## Límites
+La Fase 3 debe entregar una aplicación funcional, con autenticación, roles, operaciones CRUD, archivos, validaciones, reportes, gráficos, exportaciones y pruebas de integración.
 
-- **Dentro:** observaciones del Sprint II, interfaz coherente con prototipo, módulos acordados, búsqueda/filtros/detalles, imágenes, validaciones cliente/servidor, reportes con datos reales, gráficos, exportación PDF/Excel, pruebas, registro de defectos y RC.
-- **Fuera salvo solicitud de cambio aprobada:** pagos en línea, facturación fiscal, chat, app móvil nativa y funcionalidades no previstas en el Documento Maestro.
-- **No fusionar automáticamente:** `feature/emprendimientos-productos`; sus commits exclusivos no forman parte de la rama base.
+El objetivo es alcanzar el nivel Estratégico de la rúbrica: 9.0–10.0.
 
-## Estado inicial y prioridades
+## 2. Estado actual
 
-1. **P0 — Validar requisitos y observaciones:** registrar feedback de Sprint II, ajustar backlog y definir criterios de aceptación comprobables por módulo.
-2. **P0 — Cobertura Full Stack:** recorrer flujo administrador, emprendedor y cliente, comprobar CRUD, roles, integridad, archivos y vista responsive.
-3. **P0 — Reportes:** implementar métricas y filtros con consultas MySQL reales; graficar y exportar (preferible ambos PDF y Excel para evidencia más fuerte).
-4. **P0 — QA/RC:** matriz de integración, defectos trazados, regresión, CI satisfactorio, RC identificable y evidencias para PDF.
-5. **P1 — Mejoras visuales y usabilidad:** alinear todas las vistas con el prototipo aprobado, estados vacíos y mensajes.
+La Fase 2 ya incorporó:
 
-## Responsables principales (asignación propuesta)
+- Autenticación y autorización por roles.
+- Administración de usuarios, planes y emprendimientos.
+- Gestión de categorías y productos.
+- Catálogo público.
+- Carrito y checkout.
+- Pedidos e historial de estados.
+- Ventas y comisiones.
+- Persistencia con MySQL.
+- Validaciones y reglas de negocio.
+- Pruebas automatizadas y GitHub Actions.
 
-| Integrante | Responsabilidad | Evidencia de terminado |
-|---|---|---|
-| 1 — Tito | Tech Lead, integración, CI, ramas/PR, release, README y PDF | RC etiquetado, CI verde, documentación y defensa lista |
-| 2 | Datos, consultas y agregaciones de reportes | Métricas correctas, consultas filtradas y pruebas |
-| 3 | Autenticación, perfiles, permisos y validaciones | Flujo protegido y errores controlados cliente/servidor |
-| 4 | Negocio, categorías, productos, catálogo y archivos | CRUD, filtros, imágenes y límites de plan comprobados |
-| 5 | Carrito, checkout, pedidos, estados y comisiones | Flujo completo, transaccional e idempotente |
-| 6 | Administración, dashboards, exportaciones y coordinación QA | Gráficos/exportación + matriz y defectos actualizados |
+Estos módulos deben aprovecharse y completarse cuando sea necesario.
 
-**Regla:** cada responsable prueba su módulo; QA no reemplaza la prueba del autor. Cambios sobre servicios, modelos y contratos compartidos se coordinan con sus responsables.
+No se reconstruirán funcionalidades existentes sin una justificación técnica.
 
-## Criterios Estratégico (rúbrica oficial)
+La rama feature/emprendimientos-productos permanecerá separada y no será integrada automáticamente.
 
-| Criterio | Peso | Evidencia mínima objetivo |
-|---|---:|---|
-| Integración Full Stack e interfaz | 20% | Flujos desde vista hasta MySQL, UX consistente y responsive |
-| Cobertura funcional | 25% | Todos los roles/módulos/acciones y excepciones del alcance |
-| Validaciones y errores | 20% | Cliente y servidor, permisos y reglas robustas |
-| Reportes, gráficos y exportación | 20% | Filtros, métricas correctas, gráficas y PDF/Excel |
-| Pruebas, RC y Sprint Review | 15% | Matriz trazable, defectos, CI, RC y defensa colectiva |
+## 3. Product Backlog
 
-## Convenciones de integración
+Herramienta oficial: Trello.
 
-1. Crear ramas `feature/fase3-*` desde `develop` actualizado.
-2. Abrir PR hacia `develop`; revisar diferencias y ejecutar checks exigidos.
-3. Evitar cambios directos en `main` o `develop`; no usar `push --force`.
-4. Registrar cambios de alcance en Product Backlog y decisiones técnicas.
-5. Para cada PR documentar requerimiento, captura o demo, casos positivos/negativos, comandos de prueba y defectos conocidos.
-6. Antes del RC ejecutar `php artisan test`, `npm run build`, `php artisan route:list`, revisar migraciones y comprobar módulos con MySQL.
-7. La rama de respaldo anterior es solo un punto histórico: no desarrollarle encima.
+Tablero: EmprendeLink Scrum Backlog.
 
-## Definition of Done por historia
+El enlace normal de visualización del tablero está pendiente de confirmar. No publicar enlaces privados de invitación.
 
-- [ ] Referencia a requerimiento e historia de usuario.
-- [ ] UI, servidor y MySQL conectados.
-- [ ] Validaciones y permisos probados; errores mostrados adecuadamente.
-- [ ] Caso positivo y negativo registrados en `FASE_3_MATRIZ_PRUEBAS.md`.
-- [ ] CI y compilación sin errores.
-- [ ] Compatibilidad responsive comprobada.
-- [ ] Documentación/backlog actualizados.
-- [ ] PR integrado y demostrable.
+### Responsable adicional
 
-## Entregables para Sprint Review
+El integrante que creó originalmente el tablero será responsable de mantenerlo actualizado.
 
-- [ ] Sistema integrado y Release Candidate identificable en GitHub.
-- [ ] Autenticación, roles, CRUD, archivos, validaciones, reportes, gráficos y exportaciones.
-- [ ] Matriz de pruebas y registro de correcciones.
-- [ ] PDF con portada, integrantes, evidencias, repo y enlace al Product Backlog.
-- [ ] Demo de flujos de administrador, emprendedor y cliente.
-- [ ] Lista honesta de pendientes para Sprint IV.
+Nombre: pendiente de confirmar.
 
-**Pendiente de completar por el equipo:** nombres de integrantes 2–6, URL del Product Backlog, observaciones recibidas en Sprint II, fecha efectiva de defensa (7 u 8), IDs de historias y prototipo aprobado.
+Responsabilidades:
 
+- Actualizar historias y tareas.
+- Registrar prioridades.
+- Asignar responsables.
+- Mantener estados de las historias.
+- Evitar tarjetas duplicadas.
+- Vincular funcionalidades con commits o PR.
+- Registrar evidencias.
+- Comprobar que el tablero represente el estado real del proyecto.
+
+Esta responsabilidad será adicional al módulo técnico asignado.
+
+## 4. Historias de Fase 3
+
+Los siguientes identificadores son provisionales.
+
+Se deben vincular con historias existentes de Trello cuando corresponda, evitando duplicarlas.
+
+| ID        | Área                        | Resultado esperado                             |
+| --------- | --------------------------- | ---------------------------------------------- |
+| DWS-F3-01 | Integración e interfaz      | Flujos completos y diseño responsive           |
+| DWS-F3-02 | Seguridad y validaciones    | Roles, permisos y errores controlados          |
+| DWS-F3-03 | Catálogo y productos        | CRUD, imágenes, filtros y límites de plan      |
+| DWS-F3-04 | Pedidos y comisiones        | Checkout, pedidos, estados y cálculos          |
+| DWS-F3-05 | Reportes administrativos    | Indicadores, gráficos y exportaciones          |
+| DWS-F3-06 | Reportes del emprendedor    | Ventas, productos, comisiones y gráficos       |
+| DWS-F3-07 | Administración              | Usuarios, negocios, planes y estados de cuenta |
+| DWS-F3-08 | Calidad y Release Candidate | Pruebas, defectos, evidencia y versión final   |
+
+Los responsables específicos se definirán durante la distribución de trabajo.
+
+## 5. Criterios de aceptación
+
+Cada historia deberá indicar qué condiciones debe cumplir para considerarse terminada.
+
+Como mínimo:
+
+- La funcionalidad realiza la operación esperada.
+- Utiliza datos reales de MySQL cuando corresponde.
+- Respeta los roles y permisos.
+- Valida los datos ingresados.
+- Muestra errores comprensibles.
+- Funciona desde la interfaz.
+- Cuenta con pruebas y evidencia.
+- No presenta defectos críticos conocidos.
+
+### Ejemplo: reporte de ventas
+
+Una historia de reporte de ventas estará terminada cuando:
+
+1. El usuario autorizado pueda abrirla.
+2. Los datos provengan de MySQL.
+3. Los filtros funcionen correctamente.
+4. Los totales sean correctos.
+5. Los usuarios sin permiso no puedan acceder.
+6. Los resultados vacíos se manejen adecuadamente.
+7. Las exportaciones coincidan con los resultados mostrados.
+
+## 6. Reportes del administrador
+
+El administrador podrá consultar información general de la plataforma.
+
+### Indicadores
+
+- Pedidos por estado.
+- Ventas de pedidos entregados.
+- Comisiones generadas.
+- Emprendimientos activos.
+- Distribución de planes.
+- Evolución de ventas.
+
+### Gráficos
+
+- Barras: evolución de ventas.
+- Circular: distribución de pedidos por estado.
+- Tablas: comisiones, emprendimientos y planes.
+
+### Filtros
+
+- Fecha inicial.
+- Fecha final.
+- Emprendimiento, cuando corresponda.
+- Estado del pedido, cuando corresponda.
+
+## 7. Reportes del emprendedor
+
+Cada emprendedor podrá consultar únicamente información de su negocio.
+
+### Indicadores
+
+- Ventas de pedidos entregados.
+- Pedidos por estado.
+- Productos más vendidos.
+- Comisiones generadas.
+- Evolución de ventas.
+
+### Gráficos
+
+- Barras: ventas por período.
+- Ranking: productos más vendidos.
+- Circular: pedidos por estado.
+
+### Filtros
+
+- Fecha inicial.
+- Fecha final.
+- Estado del pedido, cuando corresponda.
+
+El servidor deberá determinar qué emprendimiento pertenece al usuario autenticado.
+
+No debe permitirse consultar datos ajenos modificando parámetros de la URL.
+
+## 8. Reglas de cálculo
+
+Los reportes deberán utilizar definiciones consistentes.
+
+### Pedidos
+
+Contar los registros de pedidos y agruparlos por su estado actual.
+
+Los filtros temporales utilizarán inicialmente la fecha de creación del pedido.
+
+### Ventas entregadas
+
+Sumar el subtotal de los pedidos cuyo estado actual sea Entregado.
+
+Si se filtra por fechas de creación, el indicador representa pedidos creados en ese período que actualmente están entregados.
+
+No debe confundirse con ventas efectivamente entregadas durante el período, que requerirían utilizar fechas del historial de estados.
+
+### Comisiones
+
+Sumar los valores históricos registrados en las comisiones.
+
+Distinguir entre comisiones generadas y comisiones pagadas.
+
+No recalcular pedidos históricos utilizando el porcentaje de un plan nuevo.
+
+### Productos más vendidos
+
+Sumar las cantidades de los detalles de pedidos entregados, aplicando los filtros del reporte.
+
+### Distribución de planes
+
+Considerar únicamente las suscripciones o planes vigentes correspondientes.
+
+No contar suscripciones antiguas como si fueran actuales.
+
+### Validación de períodos
+
+- La fecha inicial no puede superar la final.
+- El período debe aplicarse de forma consistente.
+- Los filtros no deben permitir consultar datos de otro emprendimiento.
+
+## 9. Exportaciones
+
+Se propone generar reportes en:
+
+- PDF.
+- Excel (XLSX).
+
+Las exportaciones deberán:
+
+- Utilizar los mismos filtros que la pantalla.
+- Mostrar los mismos resultados y totales.
+- Respetar los permisos del usuario.
+- Incluir títulos y encabezados claros.
+- Manejar correctamente períodos sin resultados.
+
+Antes de instalar dependencias, verificar compatibilidad con Laravel y PHP.
+
+## 10. Pruebas de integración
+
+Se utilizará:
+
+docs/FASE_3_MATRIZ_PRUEBAS.md
+
+Cada funcionalidad deberá comprobar:
+
+- Caso positivo.
+- Caso negativo.
+- Validaciones.
+- Permisos.
+- Persistencia correcta.
+- Mensajes de error.
+- Comportamiento responsive, cuando corresponda.
+
+Los resultados deberán registrarse con evidencia real.
+
+## 11. Gestión de defectos
+
+Se utilizará:
+
+docs/FASE_3_DEFECTOS.md
+
+Cada defecto confirmado deberá registrar:
+
+- Identificador.
+- Historia relacionada.
+- Módulo.
+- Descripción.
+- Prioridad.
+- Responsable.
+- Estado.
+- Corrección.
+- Evidencia.
+
+Las observaciones del docente en Fase 2 deberán incorporarse cuando se conozcan.
+
+## 12. Flujo de integración
+
+1. Trabajar desde ramas creadas a partir de develop.
+2. Utilizar Pull Requests hacia develop.
+3. Mantener GitHub Actions funcionando.
+4. No exigir aprobación manual obligatoria de otro integrante en cada PR.
+5. No utilizar push --force en las ramas oficiales.
+6. Mantener Trello actualizado.
+7. Respetar la arquitectura y los contratos existentes.
+8. Registrar los cambios importantes de alcance.
+
+## 13. Definition of Done
+
+Una historia estará terminada cuando:
+
+- [ ] Tiene identificador en Trello.
+- [ ] Tiene responsable.
+- [ ] Tiene criterios de aceptación.
+- [ ] Cumple los criterios definidos.
+- [ ] Utiliza datos reales cuando corresponde.
+- [ ] Aplica permisos y validaciones.
+- [ ] Tiene pruebas positivas y negativas.
+- [ ] Cuenta con evidencia.
+- [ ] Pasa los controles automáticos aplicables.
+- [ ] Está integrada en develop.
+
+## 14. Rúbrica de Fase 3
+
+| Criterio                                   | Peso |
+| ------------------------------------------ | ---: |
+| Integración Full Stack e interfaz          |  20% |
+| Cobertura funcional                        |  25% |
+| Validaciones y manejo de errores           |  20% |
+| Reportes, gráficos y exportaciones         |  20% |
+| Pruebas, Release Candidate y Sprint Review |  15% |
+
+## 15. Entregables
+
+- [ ] Sistema Full Stack integrado.
+- [ ] Autenticación y roles funcionales.
+- [ ] CRUD y módulos del alcance terminados.
+- [ ] Gestión de archivos y validaciones.
+- [ ] Reportes, gráficos y exportaciones.
+- [ ] Pruebas de integración.
+- [ ] Registro de defectos y correcciones.
+- [ ] Release Candidate identificable en GitHub.
+- [ ] PDF con portada, integrantes y evidencias.
+- [ ] Enlace al repositorio.
+- [ ] Enlace al Product Backlog de Trello.
+- [ ] Demostración de los tres roles.
+- [ ] Lista de pendientes para Sprint IV.
+
+## 16. Información pendiente
+
+- Confirmar responsable de Trello.
+- Confirmar enlace normal del tablero.
+- Vincular historias existentes con los IDs propuestos.
+- Registrar observaciones oficiales de Fase 2.
+- Confirmar prototipo aprobado.
+- Formalizar responsabilidades de los seis integrantes.
+
+No se utilizarán cronogramas internos.
+
+El seguimiento se realizará mediante tareas, responsables, estados, criterios de aceptación y evidencias.
