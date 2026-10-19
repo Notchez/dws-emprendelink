@@ -1,4 +1,4 @@
-# EmprendeLink — Fase 3: Integración Full Stack y Release Candidate
+﻿# EmprendeLink — Fase 3: Integración Full Stack y Release Candidate
 
 **Materia:** DWS901  
 **Entrega objetivo:** 8 de noviembre de 2026 (la ruta indica 7 u 8)  
@@ -48,19 +48,6 @@ Entregar un sistema Full Stack completamente integrado entre vistas Blade/AdminL
 | Reportes, gráficos y exportación | 20% | Filtros, métricas correctas, gráficas y PDF/Excel |
 | Pruebas, RC y Sprint Review | 15% | Matriz trazable, defectos, CI, RC y defensa colectiva |
 
-## Cronograma de coordinación
-
-| Fechas | Hito | Criterio de salida |
-|---|---|---|
-| 19–20 oct | Backlog/contratos, observaciones, ramas | Asignaciones y requisitos confirmados |
-| 21–26 oct | Integración y módulos | Flujos básicos completos por rol |
-| 27 oct–1 nov | Reportes/gráficos/exportación | Indicadores y archivos generados con datos reales |
-| 2–4 nov | QA y regresión | Matriz completa y defectos P0 resueltos |
-| 5 nov | RC1 | Congelación de alcance, solo correcciones |
-| 6 nov | RC final | CI verde, pruebas y evidencia cerradas |
-| 7 nov | Ensayo | Demo reproducible por los seis integrantes |
-| 8 nov | Sprint Review | Defensa y envío de PDF + enlaces |
-
 ## Convenciones de integración
 
 1. Crear ramas `feature/fase3-*` desde `develop` actualizado.
@@ -92,3 +79,4 @@ Entregar un sistema Full Stack completamente integrado entre vistas Blade/AdminL
 - [ ] Lista honesta de pendientes para Sprint IV.
 
 **Pendiente de completar por el equipo:** nombres de integrantes 2–6, URL del Product Backlog, observaciones recibidas en Sprint II, fecha efectiva de defensa (7 u 8), IDs de historias y prototipo aprobado.
+
