@@ -31,6 +31,7 @@ Prefijo `/emprendedor`, nombre `entrepreneur.*`, middleware `auth`, `active` y `
 - Productos: listado, alta, edición y activación/desactivación.
 - Pedidos: listado, detalle y transición de estado.
 - Ventas y cuenta mensual: consultas del emprendimiento autenticado. `/emprendedor/comisiones` usa un selector `YYYY-MM` y no permite modificaciones.
+- Reportes: `GET /emprendedor/reportes` (`entrepreneur.reports.index`) consulta indicadores, pedidos por estado, ventas por período y ranking de productos del emprendimiento autenticado con filtro `desde`/`hasta`.
 
 ## Administración
 
