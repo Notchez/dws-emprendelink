@@ -134,6 +134,23 @@
                     <h2 class="h5 mb-0">Pedidos por estado</h2>
                     <span class="badge badge-soft">Total: {{ $report['totalPedidos'] }}</span>
                 </div>
+                @if($charts['pedidosPorEstado']['vacio'])
+                    <p class="empty-state border-bottom mb-0">No hay pedidos en el período seleccionado.</p>
+                @else
+                    <div class="card-body border-bottom">
+                        <div class="ratio ratio-4x3">
+                            <canvas
+                                role="img"
+                                aria-label="Gráfico circular de pedidos por estado. Los valores exactos están en la tabla siguiente."
+                                data-report-chart="status"
+                                data-report-chart-data="{{ json_encode($charts['pedidosPorEstado'], JSON_THROW_ON_ERROR | JSON_PRESERVE_ZERO_FRACTION) }}"
+                            >Gráfico no disponible. Consulta la tabla siguiente.</canvas>
+                        </div>
+                    </div>
+                    <p class="alert alert-warning small m-3 mb-0" role="status" data-report-chart-error hidden>
+                        No se pudo cargar el gráfico. Los datos están en la tabla siguiente.
+                    </p>
+                @endif
                 <div class="table-responsive">
                     <table class="table mb-0">
                         <thead>
@@ -161,6 +178,21 @@
                     <h2 class="h5 mb-0">Productos más vendidos</h2>
                     <span class="text-body-secondary small">Top {{ \App\Services\Reports\EntrepreneurReportService::TOP_PRODUCTS_LIMIT }}</span>
                 </div>
+                @if(! $charts['topProductos']['vacio'])
+                    <div class="card-body border-bottom">
+                        <div class="ratio ratio-4x3">
+                            <canvas
+                                role="img"
+                                aria-label="Gráfico de barras horizontales con el ranking de productos más vendidos. Los valores exactos están en la tabla siguiente."
+                                data-report-chart="products"
+                                data-report-chart-data="{{ json_encode($charts['topProductos'], JSON_THROW_ON_ERROR | JSON_PRESERVE_ZERO_FRACTION) }}"
+                            >Gráfico no disponible. Consulta la tabla siguiente.</canvas>
+                        </div>
+                    </div>
+                    <p class="alert alert-warning small m-3 mb-0" role="status" data-report-chart-error hidden>
+                        No se pudo cargar el gráfico. Los datos están en la tabla siguiente.
+                    </p>
+                @endif
                 <div class="table-responsive">
                     <table class="table mb-0">
                         <thead>
@@ -196,10 +228,25 @@
             <div class="card">
                 <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2">
                     <h2 class="h5 mb-0">
-                        Ventas por período ({{ $report['granularidad'] === 'dia' ? 'por día' : 'por mes' }})
+                        Evolución de ventas ({{ $report['granularidad'] === 'dia' ? 'por día' : 'por mes' }})
                     </h2>
                     <strong class="price">${{ number_format((float) $report['ventas']['total'], 2) }}</strong>
                 </div>
+                @if(! $charts['ventasPorPeriodo']['vacio'])
+                    <div class="card-body border-bottom">
+                        <div class="ratio ratio-21x9" style="min-height: 14rem;">
+                            <canvas
+                                role="img"
+                                aria-label="Gráfico de barras de evolución de ventas entregadas por período. Los valores exactos están en la tabla siguiente."
+                                data-report-chart="sales"
+                                data-report-chart-data="{{ json_encode($charts['ventasPorPeriodo'], JSON_THROW_ON_ERROR | JSON_PRESERVE_ZERO_FRACTION) }}"
+                            >Gráfico no disponible. Consulta la tabla siguiente.</canvas>
+                        </div>
+                    </div>
+                    <p class="alert alert-warning small m-3 mb-0" role="status" data-report-chart-error hidden>
+                        No se pudo cargar el gráfico. Los datos están en la tabla siguiente.
+                    </p>
+                @endif
                 <div class="table-responsive">
                     <table class="table mb-0">
                         <thead>

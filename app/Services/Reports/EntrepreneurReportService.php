@@ -5,6 +5,7 @@ namespace App\Services\Reports;
 use App\Enums\CommissionStatus;
 use App\Enums\OrderStatus;
 use App\Models\Emprendimiento;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
 class EntrepreneurReportService
@@ -34,6 +35,72 @@ class EntrepreneurReportService
             'ventasPorPeriodo' => $this->salesByPeriod($business, $filters),
             'granularidad' => $filters->groupsByDay() ? 'dia' : 'mes',
             'topProductos' => $this->topProducts($business, $filters, self::TOP_PRODUCTS_LIMIT),
+        ];
+    }
+
+    /**
+     * Transforma el reporte ya calculado en series para los gráficos.
+     * No consulta la base de datos ni recalcula totales.
+     *
+     * @param  array{
+     *     pedidosPorEstado: array<string, int>,
+     *     totalPedidos: int,
+     *     ventas: array{total: string, pedidos: int},
+     *     comisiones: array{generadas: string, pagadas: string, pendientes: string, cantidad: int},
+     *     ventasPorPeriodo: list<array{periodo: string, ventas: string, pedidos: int}>,
+     *     granularidad: 'dia'|'mes',
+     *     topProductos: list<array{producto_id: int, nombre: string, unidades: int, ingresos: string}>
+     * }  $report
+     * @return array{
+     *     ventasPorPeriodo: array{vacio: bool, granularidad: string, etiquetas: list<string>, ventas: list<float>, pedidos: list<int>},
+     *     pedidosPorEstado: array{vacio: bool, etiquetas: list<string>, valores: list<int>},
+     *     topProductos: array{vacio: bool, etiquetas: list<string>, unidades: list<int>, ingresos: list<float>}
+     * }
+     */
+    public function charts(array $report): array
+    {
+        $byDay = $report['granularidad'] === 'dia';
+        $salesLabels = [];
+        $salesAmounts = [];
+        $salesOrders = [];
+
+        foreach ($report['ventasPorPeriodo'] as $row) {
+            $salesLabels[] = $byDay
+                ? CarbonImmutable::createFromFormat('!Y-m-d', $row['periodo'])->format('d/m/Y')
+                : CarbonImmutable::createFromFormat('!Y-m', $row['periodo'])->format('m/Y');
+            $salesAmounts[] = round((float) $row['ventas'], 2);
+            $salesOrders[] = (int) $row['pedidos'];
+        }
+
+        $productLabels = [];
+        $productUnits = [];
+        $productRevenue = [];
+
+        foreach ($report['topProductos'] as $product) {
+            $productLabels[] = (string) $product['nombre'];
+            $productUnits[] = (int) $product['unidades'];
+            $productRevenue[] = round((float) $product['ingresos'], 2);
+        }
+
+        return [
+            'ventasPorPeriodo' => [
+                'vacio' => (int) $report['ventas']['pedidos'] === 0,
+                'granularidad' => $report['granularidad'],
+                'etiquetas' => $salesLabels,
+                'ventas' => $salesAmounts,
+                'pedidos' => $salesOrders,
+            ],
+            'pedidosPorEstado' => [
+                'vacio' => (int) $report['totalPedidos'] === 0,
+                'etiquetas' => array_keys($report['pedidosPorEstado']),
+                'valores' => array_map('intval', array_values($report['pedidosPorEstado'])),
+            ],
+            'topProductos' => [
+                'vacio' => $report['topProductos'] === [],
+                'etiquetas' => $productLabels,
+                'unidades' => $productUnits,
+                'ingresos' => $productRevenue,
+            ],
         ];
     }
 

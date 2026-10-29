@@ -13,6 +13,9 @@ use App\Models\Producto;
 use App\Services\Admin\BusinessAdministrationService;
 use App\Services\Commissions\CommissionLedgerService;
 use App\Services\Reports\ReportFilters;
+use DOMDocument;
+use DOMElement;
+use DOMXPath;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -603,6 +606,351 @@ class EntrepreneurReportTest extends TestCase
         $this->actingAs($orphanEntrepreneur)
             ->get(route('entrepreneur.reports.index'))
             ->assertNotFound();
+    }
+
+    public function test_charts_series_are_internally_coherent_with_report_totals(): void
+    {
+        $this->travelTo(Carbon::create(2026, 10, 15, 11, 0));
+        $owner = $this->user(UserRole::EMPRENDEDOR);
+        $business = $this->business($owner);
+        $prodA = $this->product($business, ['nombre' => 'Café Pacamara', 'precio' => 14.25]);
+        $prodB = $this->product($business, ['nombre' => 'Taza Cerámica', 'precio' => 10.00]);
+
+        $this->travelTo(Carbon::create(2026, 10, 4, 10, 0));
+        $this->deliveredOrderWithItems($business, [[$prodA, 2, 14.25], [$prodB, 1, 10.00]]); // 38.50
+
+        $this->travelTo(Carbon::create(2026, 10, 12, 15, 0));
+        $this->deliveredOrderWithItems($business, [[$prodB, 3, 10.00]]); // 30.00
+        $this->order($business, attributes: ['estado_actual' => OrderStatus::PENDIENTE, 'subtotal' => 50]);
+        $this->order($business, attributes: ['estado_actual' => OrderStatus::CANCELADO, 'subtotal' => 25]);
+
+        $response = $this->actingAs($owner)->get(route('entrepreneur.reports.index', [
+            'desde' => '2026-10-01',
+            'hasta' => '2026-10-15',
+        ]))->assertOk();
+
+        $report = $response->viewData('report');
+        $charts = $response->viewData('charts');
+
+        $this->assertFalse($charts['ventasPorPeriodo']['vacio']);
+        $this->assertFalse($charts['pedidosPorEstado']['vacio']);
+        $this->assertFalse($charts['topProductos']['vacio']);
+
+        $this->assertSame(
+            round((float) $report['ventas']['total'], 2),
+            round(array_sum($charts['ventasPorPeriodo']['ventas']), 2),
+        );
+        $this->assertSame(
+            $report['ventas']['pedidos'],
+            array_sum($charts['ventasPorPeriodo']['pedidos']),
+        );
+        $this->assertSame(
+            $report['totalPedidos'],
+            array_sum($charts['pedidosPorEstado']['valores']),
+        );
+
+        $this->assertCount(
+            count($charts['ventasPorPeriodo']['etiquetas']),
+            $charts['ventasPorPeriodo']['ventas'],
+        );
+        $this->assertCount(
+            count($charts['ventasPorPeriodo']['etiquetas']),
+            $charts['ventasPorPeriodo']['pedidos'],
+        );
+        $this->assertCount(
+            count($charts['pedidosPorEstado']['etiquetas']),
+            $charts['pedidosPorEstado']['valores'],
+        );
+        $this->assertCount(
+            count($charts['topProductos']['etiquetas']),
+            $charts['topProductos']['unidades'],
+        );
+        $this->assertCount(
+            count($charts['topProductos']['etiquetas']),
+            $charts['topProductos']['ingresos'],
+        );
+    }
+
+    public function test_charts_series_match_independent_mysql_queries(): void
+    {
+        $owner = $this->user(UserRole::EMPRENDEDOR);
+        $business = $this->business($owner);
+        $prodA = $this->product($business, ['nombre' => 'Loroco Fresco', 'precio' => 8.50]);
+        $prodB = $this->product($business, ['nombre' => 'Crema Artesanal', 'precio' => 12.00]);
+
+        $this->travelTo(Carbon::create(2026, 10, 2, 9, 0));
+        $this->deliveredOrderWithItems($business, [[$prodA, 4, 8.50]]); // 34.00
+
+        $this->travelTo(Carbon::create(2026, 10, 3, 14, 0));
+        $this->deliveredOrderWithItems($business, [[$prodB, 2, 12.00], [$prodA, 1, 8.50]]); // 32.50
+        $this->order($business, attributes: ['estado_actual' => OrderStatus::CONFIRMADO, 'subtotal' => 40]);
+
+        $charts = $this->actingAs($owner)->get(route('entrepreneur.reports.index', [
+            'desde' => '2026-10-01',
+            'hasta' => '2026-10-04',
+        ]))->assertOk()->viewData('charts');
+
+        // 1. Contraste contra SQL para gráfico circular de estados
+        $expectedStatuses = [];
+        foreach (OrderStatus::cases() as $status) {
+            $expectedStatuses[$status->value] = DB::table('pedidos')
+                ->where('emprendimiento_id', $business->id)
+                ->where('estado_actual', $status->value)
+                ->whereBetween('created_at', ['2026-10-01 00:00:00', '2026-10-04 23:59:59'])
+                ->count();
+        }
+        $this->assertSame(array_keys($expectedStatuses), $charts['pedidosPorEstado']['etiquetas']);
+        $this->assertSame(array_values($expectedStatuses), $charts['pedidosPorEstado']['valores']);
+
+        // 2. Contraste contra SQL para serie diaria de ventas (01/10 al 04/10)
+        $sqlDaily = DB::table('pedidos')
+            ->where('emprendimiento_id', $business->id)
+            ->where('estado_actual', OrderStatus::ENTREGADO->value)
+            ->whereBetween('created_at', ['2026-10-01 00:00:00', '2026-10-04 23:59:59'])
+            ->selectRaw("DATE_FORMAT(created_at, '%d/%m/%Y') as fecha, SUM(subtotal) as total, COUNT(*) as cantidad")
+            ->groupByRaw("DATE_FORMAT(created_at, '%d/%m/%Y')")
+            ->get()
+            ->keyBy('fecha');
+
+        $this->assertSame(['01/10/2026', '02/10/2026', '03/10/2026', '04/10/2026'], $charts['ventasPorPeriodo']['etiquetas']);
+        $this->assertSame([
+            0.0,
+            round((float) $sqlDaily['02/10/2026']->total, 2),
+            round((float) $sqlDaily['03/10/2026']->total, 2),
+            0.0,
+        ], $charts['ventasPorPeriodo']['ventas']);
+        $this->assertSame([
+            0,
+            (int) $sqlDaily['02/10/2026']->cantidad,
+            (int) $sqlDaily['03/10/2026']->cantidad,
+            0,
+        ], $charts['ventasPorPeriodo']['pedidos']);
+
+        // 3. Contraste contra SQL para ranking de productos
+        $sqlProducts = DB::table('detalle_pedidos')
+            ->join('pedidos', 'pedidos.id', '=', 'detalle_pedidos.pedido_id')
+            ->join('productos', 'productos.id', '=', 'detalle_pedidos.producto_id')
+            ->where('pedidos.emprendimiento_id', $business->id)
+            ->where('pedidos.estado_actual', OrderStatus::ENTREGADO->value)
+            ->whereBetween('pedidos.created_at', ['2026-10-01 00:00:00', '2026-10-04 23:59:59'])
+            ->groupBy('detalle_pedidos.producto_id', 'productos.nombre')
+            ->selectRaw('productos.nombre, SUM(detalle_pedidos.cantidad) as unidades, SUM(detalle_pedidos.subtotal) as ingresos')
+            ->orderByDesc('unidades')
+            ->get();
+
+        $this->assertSame(
+            $sqlProducts->pluck('nombre')->all(),
+            $charts['topProductos']['etiquetas'],
+        );
+        $this->assertSame(
+            $sqlProducts->map(fn ($r) => (int) $r->unidades)->all(),
+            $charts['topProductos']['unidades'],
+        );
+        $this->assertSame(
+            $sqlProducts->map(fn ($r) => round((float) $r->ingresos, 2))->all(),
+            $charts['topProductos']['ingresos'],
+        );
+    }
+
+    public function test_chart_labels_format_by_day_up_to_62_days_and_by_month_from_63_days(): void
+    {
+        $owner = $this->user(UserRole::EMPRENDEDOR);
+        $business = $this->business($owner);
+        $product = $this->product($business, ['precio' => 25]);
+
+        $this->travelTo(Carbon::create(2026, 9, 5, 10, 0));
+        $this->deliveredOrderWithItems($business, [[$product, 2, 25.00]]); // 50.00
+
+        $dailyCharts = $this->actingAs($owner)->get(route('entrepreneur.reports.index', [
+            'desde' => '2026-09-01',
+            'hasta' => '2026-11-01',
+        ]))->assertOk()->viewData('charts');
+
+        $this->assertSame('dia', $dailyCharts['ventasPorPeriodo']['granularidad']);
+        $this->assertCount(62, $dailyCharts['ventasPorPeriodo']['etiquetas']);
+        $this->assertSame('01/09/2026', $dailyCharts['ventasPorPeriodo']['etiquetas'][0]);
+        $this->assertSame('05/09/2026', $dailyCharts['ventasPorPeriodo']['etiquetas'][4]);
+        $this->assertSame(50.0, $dailyCharts['ventasPorPeriodo']['ventas'][4]);
+        $this->assertSame(0.0, $dailyCharts['ventasPorPeriodo']['ventas'][0]);
+
+        $monthlyCharts = $this->actingAs($owner)->get(route('entrepreneur.reports.index', [
+            'desde' => '2026-09-01',
+            'hasta' => '2026-11-02',
+        ]))->assertOk()->viewData('charts');
+
+        $this->assertSame('mes', $monthlyCharts['ventasPorPeriodo']['granularidad']);
+        $this->assertSame(['09/2026', '10/2026', '11/2026'], $monthlyCharts['ventasPorPeriodo']['etiquetas']);
+        $this->assertSame([50.0, 0.0, 0.0], $monthlyCharts['ventasPorPeriodo']['ventas']);
+        $this->assertSame([1, 0, 0], $monthlyCharts['ventasPorPeriodo']['pedidos']);
+    }
+
+    public function test_rendered_html_contains_three_canvases_whose_json_matches_server_charts_data(): void
+    {
+        $this->travelTo(Carbon::create(2026, 10, 10, 12, 0));
+        $owner = $this->user(UserRole::EMPRENDEDOR);
+        $business = $this->business($owner);
+        $product = $this->product($business, ['nombre' => 'Chocolate Artesanal', 'precio' => 17.50]);
+        $this->deliveredOrderWithItems($business, [[$product, 2, 17.50]]); // 35.00
+
+        $response = $this->actingAs($owner)->get(route('entrepreneur.reports.index', [
+            'desde' => '2026-10-01',
+            'hasta' => '2026-10-15',
+        ]))->assertOk();
+
+        $charts = $response->viewData('charts');
+        $parsedCanvases = $this->extractChartPayloads($response->getContent());
+
+        $this->assertSame(['status', 'products', 'sales'], array_keys($parsedCanvases));
+        $this->assertSame($charts['pedidosPorEstado'], $parsedCanvases['status']);
+        $this->assertSame($charts['topProductos'], $parsedCanvases['products']);
+        $this->assertSame($charts['ventasPorPeriodo'], $parsedCanvases['sales']);
+    }
+
+    public function test_empty_period_renders_no_canvas_elements_and_keeps_empty_states(): void
+    {
+        $this->travelTo(Carbon::create(2026, 10, 26, 10, 0));
+        $owner = $this->user(UserRole::EMPRENDEDOR);
+        $business = $this->business($owner);
+
+        $response = $this->actingAs($owner)->get(route('entrepreneur.reports.index', [
+            'desde' => '2026-02-01',
+            'hasta' => '2026-02-15',
+        ]));
+
+        $response->assertOk()
+            ->assertSee('No hay pedidos en el período seleccionado.')
+            ->assertDontSee('<canvas', false)
+            ->assertDontSee('data-report-chart=', false);
+
+        $charts = $response->viewData('charts');
+        $this->assertTrue($charts['ventasPorPeriodo']['vacio']);
+        $this->assertTrue($charts['pedidosPorEstado']['vacio']);
+        $this->assertTrue($charts['topProductos']['vacio']);
+
+        // Si solo existen pedidos pendientes (sin entregados), solo se emite el gráfico de estados
+        $this->travelTo(Carbon::create(2026, 2, 10, 9, 0));
+        $this->order($business, attributes: ['estado_actual' => OrderStatus::PENDIENTE, 'subtotal' => 45]);
+
+        $partialResponse = $this->actingAs($owner)->get(route('entrepreneur.reports.index', [
+            'desde' => '2026-02-01',
+            'hasta' => '2026-02-15',
+        ]))->assertOk();
+
+        $this->assertSame(['status'], array_keys($this->extractChartPayloads($partialResponse->getContent())));
+    }
+
+    public function test_product_names_with_html_and_script_characters_are_escaped_in_chart_attributes(): void
+    {
+        $this->travelTo(Carbon::create(2026, 10, 12, 10, 0));
+        $owner = $this->user(UserRole::EMPRENDEDOR);
+        $business = $this->business($owner);
+        $dangerousName = '"><script>alert(1)</script>';
+        $product = $this->product($business, ['nombre' => $dangerousName, 'precio' => 20]);
+        $this->deliveredOrderWithItems($business, [[$product, 1, 20.00]]);
+
+        $response = $this->actingAs($owner)->get(route('entrepreneur.reports.index', [
+            'desde' => '2026-10-01',
+            'hasta' => '2026-10-15',
+        ]))->assertOk();
+
+        $html = $response->getContent();
+        $this->assertStringNotContainsString('"><script>', $html);
+        $this->assertStringNotContainsString('<script>alert(1)</script>', $html);
+
+        $parsedCanvases = $this->extractChartPayloads($html);
+        $this->assertSame([$dangerousName], $parsedCanvases['products']['etiquetas']);
+    }
+
+    public function test_chart_attributes_never_expose_other_business_products_or_amounts(): void
+    {
+        $this->travelTo(Carbon::create(2026, 10, 14, 11, 0));
+
+        $ownerA = $this->user(UserRole::EMPRENDEDOR);
+        $businessA = $this->business($ownerA);
+        $prodA = $this->product($businessA, ['nombre' => 'Dulce de Leche Propio', 'precio' => 15]);
+        $this->deliveredOrderWithItems($businessA, [[$prodA, 2, 15.00]]); // 30.00
+
+        $ownerB = $this->user(UserRole::EMPRENDEDOR);
+        $businessB = $this->business($ownerB);
+        $prodB = $this->product($businessB, ['nombre' => 'Producto Confidencial B', 'precio' => 444.44]);
+        $this->deliveredOrderWithItems($businessB, [[$prodB, 2, 444.44]]); // 888.88
+
+        $response = $this->actingAs($ownerA)->get(route('entrepreneur.reports.index', [
+            'desde' => '2026-10-01',
+            'hasta' => '2026-10-31',
+            'emprendimiento_id' => $businessB->id,
+        ]))->assertOk();
+
+        $html = $response->getContent();
+        $this->assertStringNotContainsString('Producto Confidencial B', $html);
+        $this->assertStringNotContainsString('888.88', $html);
+
+        $parsed = $this->extractChartPayloads($html);
+        $this->assertSame(['Dulce de Leche Propio'], $parsed['products']['etiquetas']);
+        $this->assertSame([30.0], $parsed['products']['ingresos']);
+    }
+
+    public function test_invalid_date_filters_and_unauthorized_users_never_receive_chart_markup(): void
+    {
+        $owner = $this->user(UserRole::EMPRENDEDOR);
+        $business = $this->business($owner);
+        $product = $this->product($business, ['precio' => 25]);
+        $this->deliveredOrderWithItems($business, [[$product, 1, 25.00]]);
+
+        $this->get(route('entrepreneur.reports.index'))
+            ->assertRedirectToRoute('login')
+            ->assertDontSee('data-report-chart', false);
+
+        $invalidResponse = $this->actingAs($owner)->get(route('entrepreneur.reports.index', [
+            'desde' => '2026-10-20',
+            'hasta' => '2026-10-05',
+        ]));
+        $invalidResponse->assertRedirectToRoute('entrepreneur.reports.index')
+            ->assertSessionHasErrors('hasta')
+            ->assertDontSee('data-report-chart', false);
+
+        $customer = $this->user(UserRole::CLIENTE);
+        $this->actingAs($customer)
+            ->get(route('entrepreneur.reports.index'))
+            ->assertForbidden()
+            ->assertDontSee('data-report-chart', false);
+
+        $admin = $this->user(UserRole::ADMIN);
+        $this->actingAs($admin)
+            ->get(route('entrepreneur.reports.index'))
+            ->assertForbidden()
+            ->assertDontSee('data-report-chart', false);
+    }
+
+    /**
+     * @return array<string, array<string, mixed>>
+     */
+    private function extractChartPayloads(string $html): array
+    {
+        $dom = new DOMDocument;
+        libxml_use_internal_errors(true);
+        $dom->loadHTML('<?xml encoding="utf-8" ?>'.$html);
+        libxml_clear_errors();
+
+        $xpath = new DOMXPath($dom);
+        $nodes = $xpath->query('//canvas[@data-report-chart]');
+        $payloads = [];
+
+        if ($nodes === false) {
+            return $payloads;
+        }
+
+        foreach ($nodes as $node) {
+            if (! $node instanceof DOMElement) {
+                continue;
+            }
+
+            $key = $node->getAttribute('data-report-chart');
+            $raw = $node->getAttribute('data-report-chart-data');
+            $payloads[$key] = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+        }
+
+        return $payloads;
     }
 
     /**

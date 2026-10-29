@@ -15,11 +15,13 @@ class ReportController extends Controller
     {
         $business = $request->user()->emprendimiento()->firstOrFail();
         $filters = $request->filters();
+        $report = $this->reports->report($business, $filters);
 
         return view('entrepreneur.reports.index', [
             'emprendimiento' => $business,
             'filters' => $filters,
-            'report' => $this->reports->report($business, $filters),
+            'report' => $report,
+            'charts' => $this->reports->charts($report),
         ]);
     }
 }
