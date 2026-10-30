@@ -29,5 +29,7 @@ Route::middleware(['auth','active','role:emprendedor'])->prefix('emprendedor')->
     Route::patch('/pedidos/{pedido}/estado', [OrderController::class,'status'])->name('orders.status');
     Route::get('/ventas', [CommissionController::class,'sales'])->name('sales.index');
     Route::get('/reportes', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reportes/exportar/pdf', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
+    Route::get('/reportes/exportar/excel', [ReportController::class, 'exportExcel'])->name('reports.export.excel');
     Route::get('/comisiones', [CommissionController::class,'index'])->name('commissions.index');
 });

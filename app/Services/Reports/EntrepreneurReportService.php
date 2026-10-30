@@ -57,17 +57,21 @@ class EntrepreneurReportService
      *     topProductos: array{vacio: bool, etiquetas: list<string>, unidades: list<int>, ingresos: list<float>}
      * }
      */
+    public static function periodLabel(string $periodo, string $granularidad): string
+    {
+        return $granularidad === 'dia'
+            ? CarbonImmutable::createFromFormat('!Y-m-d', $periodo)->format('d/m/Y')
+            : CarbonImmutable::createFromFormat('!Y-m', $periodo)->format('m/Y');
+    }
+
     public function charts(array $report): array
     {
-        $byDay = $report['granularidad'] === 'dia';
         $salesLabels = [];
         $salesAmounts = [];
         $salesOrders = [];
 
         foreach ($report['ventasPorPeriodo'] as $row) {
-            $salesLabels[] = $byDay
-                ? CarbonImmutable::createFromFormat('!Y-m-d', $row['periodo'])->format('d/m/Y')
-                : CarbonImmutable::createFromFormat('!Y-m', $row['periodo'])->format('m/Y');
+            $salesLabels[] = self::periodLabel($row['periodo'], $report['granularidad']);
             $salesAmounts[] = round((float) $row['ventas'], 2);
             $salesOrders[] = (int) $row['pedidos'];
         }

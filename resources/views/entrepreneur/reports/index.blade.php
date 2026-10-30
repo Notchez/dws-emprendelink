@@ -10,6 +10,14 @@
                 Período consultado: {{ $filters->desde->format('d/m/Y') }} – {{ $filters->hasta->format('d/m/Y') }}
             </p>
         </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-primary" href="{{ route('entrepreneur.reports.export.pdf', $filters->toQuery()) }}">
+                <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i> Exportar PDF
+            </a>
+            <a class="btn btn-outline-primary" href="{{ route('entrepreneur.reports.export.excel', $filters->toQuery()) }}">
+                <i class="bi bi-file-earmark-excel" aria-hidden="true"></i> Exportar Excel
+            </a>
+        </div>
     </div>
 @endsection
 

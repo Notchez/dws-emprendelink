@@ -12,6 +12,7 @@ use App\Models\Plan;
 use App\Models\Producto;
 use App\Services\Admin\BusinessAdministrationService;
 use App\Services\Commissions\CommissionLedgerService;
+use App\Services\Reports\EntrepreneurReportExporter;
 use App\Services\Reports\ReportFilters;
 use DOMDocument;
 use DOMElement;
@@ -19,6 +20,12 @@ use DOMXPath;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\View;
+use Illuminate\Testing\TestResponse;
+use Illuminate\View\View as IlluminateView;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use Tests\Concerns\CreatesDomainData;
 use Tests\TestCase;
 
@@ -920,6 +927,716 @@ class EntrepreneurReportTest extends TestCase
             ->get(route('entrepreneur.reports.index'))
             ->assertForbidden()
             ->assertDontSee('data-report-chart', false);
+    }
+
+    public function test_pdf_export_returns_valid_pdf_attachment_with_no_store_cache_headers(): void
+    {
+        $this->travelTo(Carbon::create(2026, 10, 26, 10, 30));
+        $owner = $this->user(UserRole::EMPRENDEDOR);
+        $business = $this->business($owner, attributes: [
+            'nombre' => 'Café El Volcán',
+            'slug' => 'cafe-el-volcan',
+        ]);
+        $product = $this->product($business, ['nombre' => 'Café Bourbon', 'precio' => 18.50]);
+        $this->deliveredOrderWithItems($business, [[$product, 2, 18.50]]);
+
+        $response = $this->actingAs($owner)->get(route('entrepreneur.reports.export.pdf', [
+            'desde' => '2026-10-01',
+            'hasta' => '2026-10-26',
+        ]));
+
+        $response->assertOk();
+        $this->assertStringStartsWith('application/pdf', (string) $response->headers->get('Content-Type'));
+        $this->assertSame(
+            'attachment; filename="reporte-cafe-el-volcan-2026-10-01_2026-10-26.pdf"',
+            $response->headers->get('Content-Disposition'),
+        );
+        $this->assertTrue($response->headers->hasCacheControlDirective('private'));
+        $this->assertTrue($response->headers->hasCacheControlDirective('no-store'));
+
+        $content = $response->getContent();
+        $this->assertStringStartsWith('%PDF-', $content);
+        $this->assertStringEndsWith('%%EOF', rtrim($content));
+    }
+
+    public function test_pdf_export_uses_identical_report_data_as_screen_and_renders_all_figures(): void
+    {
+        $owner = $this->user(UserRole::EMPRENDEDOR);
+        $plan = Plan::factory()->create(['porcentaje_comision' => 10, 'limite_productos' => 30]);
+        $business = $this->business($owner, $plan, ['nombre' => 'Taller El Bálsamo']);
+        $prodA = $this->product($business, ['nombre' => 'Hamaca Artesanal', 'precio' => 100.00]);
+        $prodB = $this->product($business, ['nombre' => 'Cojín Tejido', 'precio' => 25.00]);
+
+        $this->travelTo(Carbon::create(2026, 9, 25, 11, 0));
+        $this->deliveredOrderWithItems($business, [[$prodA, 2, 100.00]]); // 200.00 -> comision 20.00 pagada
+
+        $septemberStatement = EstadoCuenta::query()
+            ->where('emprendimiento_id', $business->id)
+            ->where('periodo_mes', 9)
+            ->where('periodo_anio', 2026)
+            ->firstOrFail();
+
+        $this->travelTo(Carbon::create(2026, 10, 8, 9, 0));
+        $admin = $this->user(UserRole::ADMIN);
+        $this->actingAs($admin)
+            ->patch(route('admin.account-statements.pay', $septemberStatement))
+            ->assertRedirect();
+
+        $this->deliveredOrderWithItems($business, [[$prodB, 3, 25.00]]); // 75.00 -> comision 7.50 pendiente
+        $this->order($business, attributes: ['estado_actual' => OrderStatus::PENDIENTE, 'subtotal' => 60]);
+        $this->order($business, attributes: ['estado_actual' => OrderStatus::CANCELADO, 'subtotal' => 40]);
+
+        $query = ['desde' => '2026-09-20', 'hasta' => '2026-10-15'];
+
+        $screenReport = $this->actingAs($owner)
+            ->get(route('entrepreneur.reports.index', $query))
+            ->assertOk()
+            ->viewData('report');
+
+        $capturedViewData = null;
+        View::composer('entrepreneur.reports.pdf', function (IlluminateView $view) use (&$capturedViewData): void {
+            $capturedViewData = $view->getData();
+        });
+
+        try {
+            $pdfResponse = $this->actingAs($owner)
+                ->get(route('entrepreneur.reports.export.pdf', $query))
+                ->assertOk();
+        } finally {
+            app('events')->forget('composing: entrepreneur.reports.pdf');
+        }
+
+        $this->assertStringStartsWith('%PDF-', $pdfResponse->getContent());
+        $this->assertIsArray($capturedViewData);
+        $this->assertSame($screenReport, $capturedViewData['report']);
+
+        $renderedHtml = view('entrepreneur.reports.pdf', $capturedViewData)->render();
+        $this->assertStringNotContainsString('<canvas', $renderedHtml);
+        $this->assertStringContainsString('Reporte de Taller El Bálsamo', $renderedHtml);
+        $this->assertStringContainsString('$275.00', $renderedHtml);
+        $this->assertStringContainsString('$27.50', $renderedHtml);
+        $this->assertStringContainsString('$20.00', $renderedHtml);
+        $this->assertStringContainsString('Pendientes: $7.50', $renderedHtml);
+        $this->assertStringContainsString('Hamaca Artesanal', $renderedHtml);
+        $this->assertStringContainsString('Cojín Tejido', $renderedHtml);
+        $this->assertStringContainsString('25/09/2026', $renderedHtml);
+        $this->assertStringContainsString('08/10/2026', $renderedHtml);
+    }
+
+    public function test_excel_export_returns_valid_xlsx_attachment_with_four_expected_worksheets(): void
+    {
+        $this->travelTo(Carbon::create(2026, 10, 26, 10, 30));
+        $owner = $this->user(UserRole::EMPRENDEDOR);
+        $business = $this->business($owner, attributes: [
+            'nombre' => 'Café El Volcán',
+            'slug' => 'cafe-el-volcan',
+        ]);
+        $product = $this->product($business, ['nombre' => 'Miel Pura', 'precio' => 12.00]);
+        $this->deliveredOrderWithItems($business, [[$product, 2, 12.00]]);
+
+        $response = $this->actingAs($owner)->get(route('entrepreneur.reports.export.excel', [
+            'desde' => '2026-10-01',
+            'hasta' => '2026-10-26',
+        ]));
+
+        $response->assertOk();
+        $this->assertSame(
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            $response->headers->get('Content-Type'),
+        );
+        $this->assertStringContainsString(
+            'reporte-cafe-el-volcan-2026-10-01_2026-10-26.xlsx',
+            (string) $response->headers->get('Content-Disposition'),
+        );
+        $this->assertStringContainsString(
+            'attachment',
+            (string) $response->headers->get('Content-Disposition'),
+        );
+        $this->assertTrue($response->headers->hasCacheControlDirective('private'));
+        $this->assertTrue($response->headers->hasCacheControlDirective('no-store'));
+
+        $workbook = $this->loadXlsxFromResponse($response);
+        $this->assertSame(
+            ['Resumen', 'Pedidos por estado', 'Ventas por período', 'Productos más vendidos'],
+            $workbook->getSheetNames(),
+        );
+        $workbook->disconnectWorksheets();
+    }
+
+    public function test_excel_export_values_match_screen_report_and_independent_mysql_queries(): void
+    {
+        $owner = $this->user(UserRole::EMPRENDEDOR);
+        $plan = Plan::factory()->create(['porcentaje_comision' => 10, 'limite_productos' => 30]);
+        $business = $this->business($owner, $plan, ['nombre' => 'Cacao de Izalco']);
+        $prodA = $this->product($business, ['nombre' => 'Tableta 70%', 'precio' => 50.00]);
+        $prodB = $this->product($business, ['nombre' => 'Nibs de Cacao', 'precio' => 15.25]);
+
+        $this->travelTo(Carbon::create(2026, 9, 28, 10, 0));
+        $this->deliveredOrderWithItems($business, [[$prodA, 2, 50.00]]); // 100.00 -> comision 10.00 pagada
+
+        $septemberStatement = EstadoCuenta::query()
+            ->where('emprendimiento_id', $business->id)
+            ->where('periodo_mes', 9)
+            ->where('periodo_anio', 2026)
+            ->firstOrFail();
+
+        $this->travelTo(Carbon::create(2026, 10, 2, 14, 0));
+        $admin = $this->user(UserRole::ADMIN);
+        $this->actingAs($admin)
+            ->patch(route('admin.account-statements.pay', $septemberStatement))
+            ->assertRedirect();
+
+        $this->deliveredOrderWithItems($business, [[$prodB, 4, 15.25], [$prodA, 1, 50.00]]); // 111.00 -> 11.10 pendiente
+        $this->order($business, attributes: ['estado_actual' => OrderStatus::PENDIENTE, 'subtotal' => 90]);
+        $this->order($business, attributes: ['estado_actual' => OrderStatus::CONFIRMADO, 'subtotal' => 45]);
+
+        $query = ['desde' => '2026-09-27', 'hasta' => '2026-10-03'];
+
+        $screenReport = $this->actingAs($owner)
+            ->get(route('entrepreneur.reports.index', $query))
+            ->assertOk()
+            ->viewData('report');
+
+        $excelResponse = $this->actingAs($owner)
+            ->get(route('entrepreneur.reports.export.excel', $query))
+            ->assertOk();
+
+        $workbook = $this->loadXlsxFromResponse($excelResponse);
+
+        $sqlSalesTotal = round((float) DB::table('pedidos')
+            ->where('emprendimiento_id', $business->id)
+            ->where('estado_actual', OrderStatus::ENTREGADO->value)
+            ->whereBetween('created_at', ['2026-09-27 00:00:00', '2026-10-03 23:59:59'])
+            ->sum('subtotal'), 2);
+
+        $sqlCommissions = DB::table('comisiones')
+            ->where('emprendimiento_id', $business->id)
+            ->whereBetween('created_at', ['2026-09-27 00:00:00', '2026-10-03 23:59:59'])
+            ->selectRaw(
+                'SUM(total_comision) as generadas, '
+                ."SUM(CASE WHEN estado = 'pagada' THEN total_comision ELSE 0 END) as pagadas, "
+                ."SUM(CASE WHEN estado = 'pendiente' THEN total_comision ELSE 0 END) as pendientes"
+            )
+            ->first();
+
+        // Hoja 1: Resumen (valores numéricos e idénticos a pantalla y SQL)
+        $summary = $workbook->getSheetByName('Resumen');
+        $this->assertNotNull($summary);
+        $this->assertSame('Cacao de Izalco', $summary->getCell('B2')->getValue());
+        $this->assertSame(DataType::TYPE_NUMERIC, $summary->getCell('B5')->getDataType());
+        $this->assertFalse($summary->getCell('B5')->isFormula());
+        $this->assertEqualsWithDelta((float) $screenReport['ventas']['total'], (float) $summary->getCell('B5')->getValue(), 0.001);
+        $this->assertEqualsWithDelta($sqlSalesTotal, (float) $summary->getCell('B5')->getValue(), 0.001);
+        $this->assertSame($screenReport['ventas']['pedidos'], (int) $summary->getCell('B6')->getValue());
+        $this->assertSame($screenReport['totalPedidos'], (int) $summary->getCell('B7')->getValue());
+        $this->assertEqualsWithDelta((float) $sqlCommissions->generadas, (float) $summary->getCell('B8')->getValue(), 0.001);
+        $this->assertEqualsWithDelta((float) $sqlCommissions->pagadas, (float) $summary->getCell('B9')->getValue(), 0.001);
+        $this->assertEqualsWithDelta((float) $sqlCommissions->pendientes, (float) $summary->getCell('B10')->getValue(), 0.001);
+
+        // Hoja 2: Pedidos por estado
+        $statusSheet = $workbook->getSheetByName('Pedidos por estado');
+        $this->assertNotNull($statusSheet);
+        $row = 2;
+        foreach ($screenReport['pedidosPorEstado'] as $estado => $cantidad) {
+            $this->assertSame($estado, $statusSheet->getCell('A'.$row)->getValue());
+            $this->assertSame($cantidad, (int) $statusSheet->getCell('B'.$row)->getValue());
+            $row++;
+        }
+        $this->assertSame('Total', $statusSheet->getCell('A'.$row)->getValue());
+        $this->assertFalse($statusSheet->getCell('B'.$row)->isFormula());
+        $this->assertSame($screenReport['totalPedidos'], (int) $statusSheet->getCell('B'.$row)->getValue());
+
+        // Hoja 3: Ventas por período (7 días entre 27/09 y 03/10)
+        $periodSheet = $workbook->getSheetByName('Ventas por período');
+        $this->assertNotNull($periodSheet);
+        $this->assertSame('Fecha', $periodSheet->getCell('A1')->getValue());
+        $this->assertSame('28/09/2026', $periodSheet->getCell('A3')->getValue());
+        $this->assertEqualsWithDelta(100.00, (float) $periodSheet->getCell('C3')->getValue(), 0.001);
+        $this->assertSame('02/10/2026', $periodSheet->getCell('A7')->getValue());
+        $this->assertEqualsWithDelta(111.00, (float) $periodSheet->getCell('C7')->getValue(), 0.001);
+        $this->assertSame('Total', $periodSheet->getCell('A9')->getValue());
+        $this->assertFalse($periodSheet->getCell('C9')->isFormula());
+        $this->assertEqualsWithDelta($sqlSalesTotal, (float) $periodSheet->getCell('C9')->getValue(), 0.001);
+
+        // Hoja 4: Productos más vendidos
+        $productsSheet = $workbook->getSheetByName('Productos más vendidos');
+        $this->assertNotNull($productsSheet);
+        $this->assertSame('Nibs de Cacao', $productsSheet->getCell('B2')->getValue());
+        $this->assertSame(4, (int) $productsSheet->getCell('C2')->getValue());
+        $this->assertEqualsWithDelta(61.00, (float) $productsSheet->getCell('D2')->getValue(), 0.001);
+        $this->assertSame('Tableta 70%', $productsSheet->getCell('B3')->getValue());
+        $this->assertSame(3, (int) $productsSheet->getCell('C3')->getValue());
+        $this->assertEqualsWithDelta(150.00, (float) $productsSheet->getCell('D3')->getValue(), 0.001);
+
+        $workbook->disconnectWorksheets();
+    }
+
+    public function test_exports_apply_date_range_filters_and_default_current_month_identically_to_screen(): void
+    {
+        $owner = $this->user(UserRole::EMPRENDEDOR);
+        $business = $this->business($owner, attributes: ['slug' => 'panaderia-sol']);
+        $prodInside = $this->product($business, ['nombre' => 'Semita Alta', 'precio' => 10.00]);
+        $prodOutside = $this->product($business, ['nombre' => 'Producto Septiembre', 'precio' => 80.00]);
+
+        $this->travelTo(Carbon::create(2026, 9, 30, 23, 59, 59));
+        $this->deliveredOrderWithItems($business, [[$prodOutside, 1, 80.00]]);
+
+        $this->travelTo(Carbon::create(2026, 10, 10, 12, 0));
+        $this->deliveredOrderWithItems($business, [[$prodInside, 3, 10.00]]); // 30.00
+
+        $this->travelTo(Carbon::create(2026, 10, 20, 9, 0));
+
+        // Sin parámetros: debe tomar el mes en curso (01/10/2026 al 20/10/2026)
+        $defaultExcel = $this->actingAs($owner)
+            ->get(route('entrepreneur.reports.export.excel'))
+            ->assertOk();
+
+        $this->assertStringContainsString(
+            'reporte-panaderia-sol-2026-10-01_2026-10-20.xlsx',
+            (string) $defaultExcel->headers->get('Content-Disposition'),
+        );
+
+        $workbook = $this->loadXlsxFromResponse($defaultExcel);
+        $this->assertEqualsWithDelta(30.00, (float) $workbook->getSheetByName('Resumen')?->getCell('B5')->getValue(), 0.001);
+        $this->assertSame('Semita Alta', $workbook->getSheetByName('Productos más vendidos')?->getCell('B2')->getValue());
+        $this->assertNull($workbook->getSheetByName('Productos más vendidos')?->getCell('B3')->getValue());
+        $workbook->disconnectWorksheets();
+
+        // Con parámetros explícitos en PDF: excluye el pedido fuera del rango
+        $capturedData = null;
+        View::composer('entrepreneur.reports.pdf', function (IlluminateView $view) use (&$capturedData): void {
+            $capturedData = $view->getData();
+        });
+
+        try {
+            $pdfResponse = $this->actingAs($owner)
+                ->get(route('entrepreneur.reports.export.pdf', [
+                    'desde' => '2026-10-01',
+                    'hasta' => '2026-10-15',
+                ]))
+                ->assertOk();
+        } finally {
+            app('events')->forget('composing: entrepreneur.reports.pdf');
+        }
+
+        $this->assertSame(
+            'attachment; filename="reporte-panaderia-sol-2026-10-01_2026-10-15.pdf"',
+            $pdfResponse->headers->get('Content-Disposition'),
+        );
+        $html = view('entrepreneur.reports.pdf', $capturedData)->render();
+        $this->assertStringContainsString('Semita Alta', $html);
+        $this->assertStringNotContainsString('Producto Septiembre', $html);
+    }
+
+    public function test_exports_group_sales_series_by_day_up_to_62_days_and_by_month_from_63_days(): void
+    {
+        $owner = $this->user(UserRole::EMPRENDEDOR);
+        $business = $this->business($owner);
+        $product = $this->product($business, ['precio' => 25.00]);
+
+        $this->travelTo(Carbon::create(2026, 9, 5, 10, 0));
+        $this->deliveredOrderWithItems($business, [[$product, 2, 25.00]]); // 50.00
+
+        // 62 días: por día (d/m/Y)
+        $dailyExcel = $this->actingAs($owner)->get(route('entrepreneur.reports.export.excel', [
+            'desde' => '2026-09-01',
+            'hasta' => '2026-11-01',
+        ]))->assertOk();
+
+        $dailyBook = $this->loadXlsxFromResponse($dailyExcel);
+        $dailySheet = $dailyBook->getSheetByName('Ventas por período');
+        $this->assertNotNull($dailySheet);
+        $this->assertSame('Fecha', $dailySheet->getCell('A1')->getValue());
+        $this->assertSame('01/09/2026', $dailySheet->getCell('A2')->getValue());
+        $this->assertSame('05/09/2026', $dailySheet->getCell('A6')->getValue());
+        $this->assertEqualsWithDelta(50.00, (float) $dailySheet->getCell('C6')->getValue(), 0.001);
+        $this->assertSame('Total', $dailySheet->getCell('A64')->getValue());
+        $dailyBook->disconnectWorksheets();
+
+        // 63 días: por mes (m/Y) en Excel y PDF
+        $monthlyExcel = $this->actingAs($owner)->get(route('entrepreneur.reports.export.excel', [
+            'desde' => '2026-09-01',
+            'hasta' => '2026-11-02',
+        ]))->assertOk();
+
+        $monthlyBook = $this->loadXlsxFromResponse($monthlyExcel);
+        $monthlySheet = $monthlyBook->getSheetByName('Ventas por período');
+        $this->assertNotNull($monthlySheet);
+        $this->assertSame('Mes', $monthlySheet->getCell('A1')->getValue());
+        $this->assertSame('09/2026', $monthlySheet->getCell('A2')->getValue());
+        $this->assertSame('10/2026', $monthlySheet->getCell('A3')->getValue());
+        $this->assertSame('11/2026', $monthlySheet->getCell('A4')->getValue());
+        $this->assertSame('Total', $monthlySheet->getCell('A5')->getValue());
+        $monthlyBook->disconnectWorksheets();
+
+        $capturedPdf = null;
+        View::composer('entrepreneur.reports.pdf', function (IlluminateView $view) use (&$capturedPdf): void {
+            $capturedPdf = $view->getData();
+        });
+
+        try {
+            $this->actingAs($owner)->get(route('entrepreneur.reports.export.pdf', [
+                'desde' => '2026-09-01',
+                'hasta' => '2026-11-02',
+            ]))->assertOk();
+        } finally {
+            app('events')->forget('composing: entrepreneur.reports.pdf');
+        }
+
+        $monthlyHtml = view('entrepreneur.reports.pdf', $capturedPdf)->render();
+        $this->assertStringContainsString('Evolución de ventas (por mes)', $monthlyHtml);
+        $this->assertStringContainsString('09/2026', $monthlyHtml);
+    }
+
+    public function test_exports_succeed_with_zeros_and_empty_message_when_period_has_no_orders(): void
+    {
+        $this->travelTo(Carbon::create(2026, 10, 26, 10, 0));
+        $owner = $this->user(UserRole::EMPRENDEDOR);
+        $this->business($owner);
+
+        $query = ['desde' => '2026-02-01', 'hasta' => '2026-02-15'];
+
+        $capturedPdf = null;
+        View::composer('entrepreneur.reports.pdf', function (IlluminateView $view) use (&$capturedPdf): void {
+            $capturedPdf = $view->getData();
+        });
+
+        try {
+            $pdfResponse = $this->actingAs($owner)
+                ->get(route('entrepreneur.reports.export.pdf', $query))
+                ->assertOk();
+        } finally {
+            app('events')->forget('composing: entrepreneur.reports.pdf');
+        }
+
+        $this->assertStringStartsWith('%PDF-', $pdfResponse->getContent());
+        $emptyHtml = view('entrepreneur.reports.pdf', $capturedPdf)->render();
+        $this->assertStringContainsString('No hay pedidos en el período seleccionado.', $emptyHtml);
+        $this->assertStringContainsString('$0.00', $emptyHtml);
+
+        $excelResponse = $this->actingAs($owner)
+            ->get(route('entrepreneur.reports.export.excel', $query))
+            ->assertOk();
+
+        $workbook = $this->loadXlsxFromResponse($excelResponse);
+        $this->assertEqualsWithDelta(0.0, (float) $workbook->getSheetByName('Resumen')?->getCell('B5')->getValue(), 0.001);
+        $this->assertSame(
+            'No hay pedidos en el período seleccionado.',
+            $workbook->getSheetByName('Resumen')?->getCell('B12')->getValue(),
+        );
+        $this->assertSame(
+            'No hay pedidos en el período seleccionado.',
+            $workbook->getSheetByName('Ventas por período')?->getCell('A2')->getValue(),
+        );
+        $this->assertSame(
+            'No hay pedidos en el período seleccionado.',
+            $workbook->getSheetByName('Productos más vendidos')?->getCell('B2')->getValue(),
+        );
+        $workbook->disconnectWorksheets();
+    }
+
+    public function test_reports_screen_renders_pdf_and_excel_export_links_with_effective_filters(): void
+    {
+        $this->travelTo(Carbon::create(2026, 10, 22, 10, 0));
+        $owner = $this->user(UserRole::EMPRENDEDOR);
+        $this->business($owner);
+
+        // Sin query string: los enlaces llevan el mes en curso efectivo
+        $defaultScreen = $this->actingAs($owner)
+            ->get(route('entrepreneur.reports.index'))
+            ->assertOk()
+            ->assertSee('Exportar PDF')
+            ->assertSee('Exportar Excel');
+
+        $defaultHtml = $defaultScreen->getContent();
+        $this->assertStringContainsString(
+            e(route('entrepreneur.reports.export.pdf', ['desde' => '2026-10-01', 'hasta' => '2026-10-22'])),
+            $defaultHtml,
+        );
+        $this->assertStringContainsString(
+            e(route('entrepreneur.reports.export.excel', ['desde' => '2026-10-01', 'hasta' => '2026-10-22'])),
+            $defaultHtml,
+        );
+
+        // Con rango explícito: los enlaces conservan ese rango
+        $filteredHtml = $this->actingAs($owner)
+            ->get(route('entrepreneur.reports.index', ['desde' => '2026-09-10', 'hasta' => '2026-09-25']))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString(
+            e(route('entrepreneur.reports.export.pdf', ['desde' => '2026-09-10', 'hasta' => '2026-09-25'])),
+            $filteredHtml,
+        );
+        $this->assertStringContainsString(
+            e(route('entrepreneur.reports.export.excel', ['desde' => '2026-09-10', 'hasta' => '2026-09-25'])),
+            $filteredHtml,
+        );
+    }
+
+    public function test_excel_export_prevents_formula_injection_in_business_and_product_names(): void
+    {
+        $this->travelTo(Carbon::create(2026, 10, 12, 10, 0));
+        $owner = $this->user(UserRole::EMPRENDEDOR);
+        $business = $this->business($owner, attributes: [
+            'nombre' => '=1+1',
+            'slug' => '===',
+        ]);
+
+        $dangerousNames = [
+            '=1+1',
+            '@SUM(1,2)',
+            '+10-5',
+            '-20+3',
+        ];
+
+        $items = [];
+        foreach ($dangerousNames as $idx => $name) {
+            $prod = $this->product($business, ['nombre' => $name, 'precio' => 10.00]);
+            $items[] = [$prod, 10 - $idx, 10.00];
+        }
+        $this->deliveredOrderWithItems($business, $items);
+
+        $exporter = app(EntrepreneurReportExporter::class);
+        $this->assertSame(
+            'reporte-emprendimiento-2026-10-01_2026-10-15.xlsx',
+            $exporter->filename($business, ReportFilters::fromDates('2026-10-01', '2026-10-15'), 'xlsx'),
+        );
+
+        $response = $this->actingAs($owner)->get(route('entrepreneur.reports.export.excel', [
+            'desde' => '2026-10-01',
+            'hasta' => '2026-10-15',
+        ]))->assertOk();
+
+        $workbook = $this->loadXlsxFromResponse($response);
+
+        $businessCell = $workbook->getSheetByName('Resumen')?->getCell('B2');
+        $this->assertNotNull($businessCell);
+        $this->assertSame(DataType::TYPE_STRING, $businessCell->getDataType());
+        $this->assertFalse($businessCell->isFormula());
+        $this->assertSame('=1+1', $businessCell->getValue());
+
+        $productsSheet = $workbook->getSheetByName('Productos más vendidos');
+        $this->assertNotNull($productsSheet);
+
+        foreach ($dangerousNames as $index => $expectedName) {
+            $cell = $productsSheet->getCell('B'.($index + 2));
+            $this->assertSame(DataType::TYPE_STRING, $cell->getDataType());
+            $this->assertFalse($cell->isFormula());
+            $this->assertSame($expectedName, $cell->getValue());
+        }
+
+        $workbook->disconnectWorksheets();
+    }
+
+    public function test_pdf_export_escapes_html_and_script_tags_in_business_and_product_names(): void
+    {
+        $this->travelTo(Carbon::create(2026, 10, 12, 10, 0));
+        $owner = $this->user(UserRole::EMPRENDEDOR);
+        $xssPayload = '"><script>alert(1)</script>';
+        $business = $this->business($owner, attributes: ['nombre' => 'Tienda '.$xssPayload]);
+        $product = $this->product($business, ['nombre' => 'Producto '.$xssPayload, 'precio' => 20.00]);
+        $this->deliveredOrderWithItems($business, [[$product, 1, 20.00]]);
+
+        $capturedPdf = null;
+        View::composer('entrepreneur.reports.pdf', function (IlluminateView $view) use (&$capturedPdf): void {
+            $capturedPdf = $view->getData();
+        });
+
+        try {
+            $response = $this->actingAs($owner)->get(route('entrepreneur.reports.export.pdf', [
+                'desde' => '2026-10-01',
+                'hasta' => '2026-10-15',
+            ]))->assertOk();
+        } finally {
+            app('events')->forget('composing: entrepreneur.reports.pdf');
+        }
+
+        $this->assertStringStartsWith('%PDF-', $response->getContent());
+
+        $html = view('entrepreneur.reports.pdf', $capturedPdf)->render();
+        $this->assertStringNotContainsString('"><script>', $html);
+        $this->assertStringNotContainsString('<script>alert(1)</script>', $html);
+        $this->assertStringContainsString(e($xssPayload), $html);
+    }
+
+    public function test_guests_are_redirected_to_login_on_both_export_routes(): void
+    {
+        $pdfGuest = $this->get(route('entrepreneur.reports.export.pdf'))
+            ->assertRedirectToRoute('login');
+        $this->assertStringStartsNotWith('%PDF-', $pdfGuest->getContent());
+
+        $excelGuest = $this->get(route('entrepreneur.reports.export.excel'))
+            ->assertRedirectToRoute('login');
+        $this->assertNotSame(
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            $excelGuest->headers->get('Content-Type'),
+        );
+    }
+
+    public function test_non_entrepreneur_roles_and_suspended_entrepreneurs_cannot_access_export_routes(): void
+    {
+        $customer = $this->user(UserRole::CLIENTE);
+        $admin = $this->user(UserRole::ADMIN);
+
+        foreach (['entrepreneur.reports.export.pdf', 'entrepreneur.reports.export.excel'] as $routeName) {
+            $this->actingAs($customer)->get(route($routeName))->assertForbidden();
+            $this->actingAs($admin)->get(route($routeName))->assertForbidden();
+        }
+
+        $suspendedPdf = $this->user(UserRole::EMPRENDEDOR, ['estado' => false]);
+        $this->business($suspendedPdf);
+        $this->actingAs($suspendedPdf)
+            ->get(route('entrepreneur.reports.export.pdf'))
+            ->assertRedirectToRoute('login');
+        $this->assertGuest();
+
+        $suspendedExcel = $this->user(UserRole::EMPRENDEDOR, ['estado' => false]);
+        $this->business($suspendedExcel);
+        $this->actingAs($suspendedExcel)
+            ->get(route('entrepreneur.reports.export.excel'))
+            ->assertRedirectToRoute('login');
+        $this->assertGuest();
+    }
+
+    public function test_exports_isolate_authenticated_business_data_and_ignore_tampered_emprendimiento_id(): void
+    {
+        $this->travelTo(Carbon::create(2026, 10, 14, 11, 0));
+
+        $ownerA = $this->user(UserRole::EMPRENDEDOR);
+        $businessA = $this->business($ownerA, attributes: ['nombre' => 'Negocio Propio A', 'slug' => 'negocio-a']);
+        $prodA = $this->product($businessA, ['nombre' => 'Café Propio A', 'precio' => 15.00]);
+        $this->deliveredOrderWithItems($businessA, [[$prodA, 2, 15.00]]); // 30.00
+
+        $ownerB = $this->user(UserRole::EMPRENDEDOR);
+        $businessB = $this->business($ownerB, attributes: ['nombre' => 'Negocio Secreto B', 'slug' => 'negocio-b']);
+        $prodB = $this->product($businessB, ['nombre' => 'Producto Confidencial B', 'precio' => 444.44]);
+        $this->deliveredOrderWithItems($businessB, [[$prodB, 2, 444.44]]); // 888.88
+
+        $tamperedQuery = [
+            'desde' => '2026-10-01',
+            'hasta' => '2026-10-31',
+            'emprendimiento_id' => $businessB->id,
+            'usuario_id' => $ownerB->id,
+        ];
+
+        $capturedPdfA = null;
+        View::composer('entrepreneur.reports.pdf', function (IlluminateView $view) use (&$capturedPdfA): void {
+            $capturedPdfA = $view->getData();
+        });
+
+        try {
+            $pdfA = $this->actingAs($ownerA)
+                ->get(route('entrepreneur.reports.export.pdf', $tamperedQuery))
+                ->assertOk();
+        } finally {
+            app('events')->forget('composing: entrepreneur.reports.pdf');
+        }
+
+        $this->assertSame(
+            'attachment; filename="reporte-negocio-a-2026-10-01_2026-10-31.pdf"',
+            $pdfA->headers->get('Content-Disposition'),
+        );
+        $htmlA = view('entrepreneur.reports.pdf', $capturedPdfA)->render();
+        $this->assertStringContainsString('Negocio Propio A', $htmlA);
+        $this->assertStringContainsString('Café Propio A', $htmlA);
+        $this->assertStringNotContainsString('Negocio Secreto B', $htmlA);
+        $this->assertStringNotContainsString('Producto Confidencial B', $htmlA);
+        $this->assertStringNotContainsString('888.88', $htmlA);
+
+        $excelA = $this->actingAs($ownerA)
+            ->get(route('entrepreneur.reports.export.excel', $tamperedQuery))
+            ->assertOk();
+
+        $bookA = $this->loadXlsxFromResponse($excelA);
+        $this->assertSame('Negocio Propio A', $bookA->getSheetByName('Resumen')?->getCell('B2')->getValue());
+        $this->assertEqualsWithDelta(30.00, (float) $bookA->getSheetByName('Resumen')?->getCell('B5')->getValue(), 0.001);
+        $this->assertSame('Café Propio A', $bookA->getSheetByName('Productos más vendidos')?->getCell('B2')->getValue());
+        $this->assertNull($bookA->getSheetByName('Productos más vendidos')?->getCell('B3')->getValue());
+        $bookA->disconnectWorksheets();
+
+        $excelB = $this->actingAs($ownerB)
+            ->get(route('entrepreneur.reports.export.excel', ['desde' => '2026-10-01', 'hasta' => '2026-10-31']))
+            ->assertOk();
+
+        $bookB = $this->loadXlsxFromResponse($excelB);
+        $this->assertSame('Negocio Secreto B', $bookB->getSheetByName('Resumen')?->getCell('B2')->getValue());
+        $this->assertEqualsWithDelta(888.88, (float) $bookB->getSheetByName('Resumen')?->getCell('B5')->getValue(), 0.001);
+        $bookB->disconnectWorksheets();
+    }
+
+    public function test_invalid_or_inverted_dates_on_export_routes_redirect_with_validation_errors_without_file(): void
+    {
+        $owner = $this->user(UserRole::EMPRENDEDOR);
+        $this->business($owner);
+
+        foreach (['entrepreneur.reports.export.pdf', 'entrepreneur.reports.export.excel'] as $routeName) {
+            $inverted = $this->actingAs($owner)->get(route($routeName, [
+                'desde' => '2026-10-25',
+                'hasta' => '2026-10-05',
+            ]));
+            $inverted->assertRedirectToRoute('entrepreneur.reports.index')
+                ->assertSessionHasErrors('hasta');
+            $this->assertStringStartsNotWith('application/pdf', (string) $inverted->headers->get('Content-Type'));
+            $this->assertNotSame(
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                $inverted->headers->get('Content-Type'),
+            );
+
+            $malformed = $this->actingAs($owner)->get(route($routeName, [
+                'desde' => '2026-02-31',
+                'hasta' => '2026-10-15',
+            ]));
+            $malformed->assertRedirectToRoute('entrepreneur.reports.index')
+                ->assertSessionHasErrors('desde');
+
+            $arrayParam = $this->actingAs($owner)->get(route($routeName, [
+                'desde' => ['x'],
+                'hasta' => '2026-10-15',
+            ]));
+            $arrayParam->assertRedirectToRoute('entrepreneur.reports.index')
+                ->assertSessionHasErrors('desde');
+        }
+    }
+
+    public function test_entrepreneur_without_business_receives_not_found_on_both_export_routes(): void
+    {
+        $orphanEntrepreneur = $this->user(UserRole::EMPRENDEDOR);
+
+        $this->actingAs($orphanEntrepreneur)
+            ->get(route('entrepreneur.reports.export.pdf'))
+            ->assertNotFound();
+
+        $this->actingAs($orphanEntrepreneur)
+            ->get(route('entrepreneur.reports.export.excel'))
+            ->assertNotFound();
+    }
+
+    public function test_export_routes_reject_write_http_methods_with_method_not_allowed(): void
+    {
+        $owner = $this->user(UserRole::EMPRENDEDOR);
+        $this->business($owner);
+
+        foreach (['entrepreneur.reports.export.pdf', 'entrepreneur.reports.export.excel'] as $routeName) {
+            $url = route($routeName);
+            $this->actingAs($owner)->post($url)->assertMethodNotAllowed();
+            $this->actingAs($owner)->put($url)->assertMethodNotAllowed();
+            $this->actingAs($owner)->patch($url)->assertMethodNotAllowed();
+            $this->actingAs($owner)->delete($url)->assertMethodNotAllowed();
+        }
+    }
+
+    private function loadXlsxFromResponse(TestResponse $response): Spreadsheet
+    {
+        $tmpFile = tempnam(sys_get_temp_dir(), 'emprendelink_xlsx_');
+        $this->assertNotFalse($tmpFile);
+        file_put_contents($tmpFile, $response->streamedContent());
+
+        try {
+            return IOFactory::load($tmpFile);
+        } finally {
+            @unlink($tmpFile);
+        }
     }
 
     /**
