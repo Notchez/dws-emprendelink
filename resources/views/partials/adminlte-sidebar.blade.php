@@ -21,6 +21,7 @@
                 ['entrepreneur.categories.*','entrepreneur.categories.index','bookmark','Categorías'],
                 ['entrepreneur.products.*','entrepreneur.products.index','box-seam','Productos'],
                 ['entrepreneur.sales.*','entrepreneur.sales.index','graph-up','Ventas'],
+                ['entrepreneur.reports.*','entrepreneur.reports.index','bar-chart-line','Reportes'],
                 ['entrepreneur.commissions.*','entrepreneur.commissions.index','calendar3','Cuenta mensual'],
             ] as [$match,$route,$icon,$label])
                 <li class="nav-item"><a href="{{ route($route) }}" @class(['nav-link','active'=>request()->routeIs($match)])><i class="nav-icon bi bi-{{ $icon }}"></i><p>{{ $label }}</p></a></li>
