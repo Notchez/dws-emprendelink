@@ -219,3 +219,21 @@ Decisión confirmada el 16 de octubre de 2026:
 Motivo: estas reglas fueron autorizadas expresamente para completar el flujo de los cuatro actores y cerrar los contratos que figuraban como pendientes en DT-03 a DT-08.
 
 Módulos afectados: usuarios, autenticación, emprendimientos, carrito, pedidos, historial, comisiones, migraciones, middleware, Policies y seeders.
+
+## DT-13 — Exportaciones de reportes en PDF y Excel
+
+Estado: acordado para Fase 3 (`feature/fase3-reportes`).
+
+Decisión confirmada el 29 de octubre de 2026:
+
+- Incorporar `barryvdh/laravel-dompdf` (`^3.1`, licencia MIT sobre `dompdf/dompdf` LGPL-2.1) para la generación de reportes en PDF y `phpoffice/phpspreadsheet` (`^5.10`, licencia MIT) para la exportación tabular en formato XLSX.
+- Exigir y declarar explícitamente en el entorno local y en Integración Continua las extensiones PHP requeridas por ambas librerías: `gd`, `zip`, `dom`, `xml`, `xmlreader`, `xmlwriter`, `simplexml`, `libxml`, `iconv`, `zlib`, `ctype`, `filter` y `mbstring`.
+- Construir las exportaciones del emprendedor a partir del mismo resultado de `EntrepreneurReportService::report()` utilizado en pantalla, sin recalcular totales por separado ni incluir gráficos embebidos dentro de los archivos descargables.
+- Escribir explícitamente como texto (`DataType::TYPE_STRING`) cualquier cadena controlada por usuarios en celdas de Excel para impedir la inyección de fórmulas (`=`, `+`, `-`, `@`), conservando importes y cantidades como valores numéricos.
+- Nota de entorno pendiente de alineación general: `composer.json` mantiene `"php": "^8.2"`, mientras que `composer.lock` exige `php >= 8.4.1` y CI ejecuta PHP 8.5.
+
+Motivo: cubrir las exportaciones PDF y Excel requeridas en Fase 3 (DWS-F3-06, INT-15) con paquetes compatibles con PHP 8.4/8.5, verificables automáticamente en PHPUnit y reutilizables sin duplicar consultas de negocio.
+
+Responsables: responsable de Base de Datos y Reportes del Emprendedor, en coordinación con mantenimiento de dependencias compartidas.
+
+Archivos o módulos afectados: `composer.json`, `composer.lock`, `.github/workflows/pruebas-laravel.yml`, `docs/INSTALACION_LOCAL.md`, `docs/RUTAS.md`, `app/Services/Reports/`, `app/Http/Controllers/Emprendedor/ReportController.php`, `routes/entrepreneur.php` y `resources/views/entrepreneur/reports/`.

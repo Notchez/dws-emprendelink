@@ -209,10 +209,25 @@ function initializeCartSynchronization() {
     });
 }
 
+function initializeReportCharts() {
+    if (!document.querySelector("canvas[data-report-chart]")) {
+        return;
+    }
+
+    import("./reports/charts")
+        .then(({ renderReportCharts }) => renderReportCharts())
+        .catch(() => {
+            document
+                .querySelectorAll("[data-report-chart-error]")
+                .forEach((message) => message.removeAttribute("hidden"));
+        });
+}
+
 function initializeApplication() {
     initializeSidebar();
     initializeImagePreviews();
     initializeCartSynchronization();
+    initializeReportCharts();
 }
 
 if (document.readyState === "loading") {

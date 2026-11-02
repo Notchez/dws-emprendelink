@@ -36,6 +36,8 @@ Ctype, cURL, DOM, Fileinfo, Filter, Hash, Mbstring, OpenSSL, PCRE,
 PDO, Session, Tokenizer y XML.
 
 Para conectar con MySQL se necesita además pdo_mysql.
+Para la exportación de reportes en PDF y Excel se requieren también gd,
+zip, iconv, libxml, SimpleXML, XMLReader, XMLWriter y zlib.
 
 Consultar las extensiones activas:
 
