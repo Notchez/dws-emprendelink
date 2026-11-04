@@ -65,7 +65,7 @@
                     >
                 </div>
 
-                <!-- DESCRIPCIÓN ACTUALIZADA: Con límite estricto, sin redimensionado y contador dinámico -->
+                
                 <div class="col-12">
                     <label class="form-label" for="descripcion">Descripción</label>
                     <textarea class="form-control" 
@@ -97,7 +97,7 @@
         </div>
     </form>
 
-    <!-- Script para el control y conteo de caracteres en tiempo real -->
+
     <script>
     function updateProductCharCount(textarea) {
         const maxLength = textarea.getAttribute('maxlength');
