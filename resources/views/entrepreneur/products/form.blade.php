@@ -65,9 +65,20 @@
                     >
                 </div>
 
+                <!-- DESCRIPCIÓN ACTUALIZADA: Con límite estricto, sin redimensionado y contador dinámico -->
                 <div class="col-12">
                     <label class="form-label" for="descripcion">Descripción</label>
-                    <textarea class="form-control" id="descripcion" name="descripcion" rows="4">{{ old('descripcion', $producto->descripcion) }}</textarea>
+                    <textarea class="form-control" 
+                              id="descripcion" 
+                              name="descripcion" 
+                              rows="4" 
+                              maxlength="255" 
+                              oninput="updateProductCharCount(this)"
+                              style="resize: none;">{{ old('descripcion', $producto->descripcion) }}</textarea>
+                    <div class="d-flex justify-content-between mt-1">
+                        <small class="text-muted">Breve descripción del producto (máximo 255 caracteres).</small>
+                        <small class="text-muted" id="product-char-count">0 / 255</small>
+                    </div>
                 </div>
 
                 <div class="col-12">
@@ -85,4 +96,23 @@
             <a class="btn btn-outline-secondary" href="{{ route('entrepreneur.products.index') }}">Cancelar</a>
         </div>
     </form>
+
+    <!-- Script para el control y conteo de caracteres en tiempo real -->
+    <script>
+    function updateProductCharCount(textarea) {
+        const maxLength = textarea.getAttribute('maxlength');
+        const currentLength = textarea.value.length;
+        const counter = document.getElementById('product-char-count');
+        if (counter) {
+            counter.textContent = `${currentLength} / ${maxLength}`;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const desc = document.getElementById('descripcion');
+        if (desc) {
+            updateProductCharCount(desc);
+        }
+    });
+    </script>
 @endsection

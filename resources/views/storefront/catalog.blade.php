@@ -4,11 +4,29 @@
 
 @section('content')
     <section class="mb-5">
+        @if($emprendimiento && $emprendimiento->logo_url)
+            <div class="mb-3">
+                <img src="{{ asset('storage/' . $emprendimiento->logo_url) }}" 
+                     alt="Logo de {{ $emprendimiento->nombre }}" 
+                     class="rounded-circle shadow-sm" 
+                     style="width: 80px; height: 80px; object-fit: cover;">
+            </div>
+        @endif
+
         <span class="badge badge-soft mb-3">{{ $emprendimiento ? 'Catálogo del negocio' : 'Marketplace local' }}</span>
         <h1 class="display-6 fw-bold mb-2">{{ $emprendimiento?->nombre ?? 'Descubre productos de emprendedores' }}</h1>
         <p class="text-body-secondary">
             {{ $emprendimiento?->descripcion ?: 'Encuentra productos, apoya negocios locales y administra tus pedidos con facilidad.' }}
         </p>
+        @if($emprendimiento && $emprendimiento->telefono_contacto)
+            <div class="d-flex align-items-center gap-2 mt-2">
+                <a href="https://wa.me/{{ ltrim($emprendimiento->codigo_area ?? '+503', '+') }}{{ $emprendimiento->telefono_contacto }}" 
+                   target="_blank" 
+                   class="btn btn-sm btn-success d-inline-flex align-items-center gap-1 text-decoration-none">
+                    <i class="bi bi-whatsapp"></i> Contactar: {{ $emprendimiento->codigo_area ?? '+503' }} {{ $emprendimiento->telefono_contacto }}
+                </a>
+            </div>
+        @endif
 
         <form class="row g-2 mt-4" method="GET">
             <div class="col-12 col-md-7">
