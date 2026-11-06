@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Emprendedor;
 
+use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Emprendedor\FilterEntrepreneurReportRequest;
 use App\Services\Reports\EntrepreneurReportExporter;
@@ -21,13 +22,20 @@ class ReportController extends Controller
     {
         $business = $request->user()->emprendimiento()->firstOrFail();
         $filters = $request->filters();
-        $report = $this->reports->report($business, $filters);
+        $status = $request->orderStatus();
+        $report = $this->reports->report($business, $filters, $status);
 
         return view('entrepreneur.reports.index', [
             'emprendimiento' => $business,
             'filters' => $filters,
             'report' => $report,
             'charts' => $this->reports->charts($report),
+            'status' => $status,
+            'statuses' => OrderStatus::cases(),
+            'query' => array_filter([
+                ...$filters->toQuery(),
+                'estado' => $status?->value,
+            ], fn (mixed $value): bool => $value !== null && $value !== ''),
         ]);
     }
 
@@ -35,7 +43,7 @@ class ReportController extends Controller
     {
         $business = $request->user()->emprendimiento()->firstOrFail();
         $filters = $request->filters();
-        $report = $this->reports->report($business, $filters);
+        $report = $this->reports->report($business, $filters, $request->orderStatus());
         $filename = $this->exports->filename($business, $filters, 'pdf');
 
         return response($this->exports->pdf($business, $filters, $report), 200, [
@@ -49,7 +57,7 @@ class ReportController extends Controller
     {
         $business = $request->user()->emprendimiento()->firstOrFail();
         $filters = $request->filters();
-        $report = $this->reports->report($business, $filters);
+        $report = $this->reports->report($business, $filters, $request->orderStatus());
         $filename = $this->exports->filename($business, $filters, 'xlsx');
 
         return response()->streamDownload(function () use ($business, $filters, $report): void {

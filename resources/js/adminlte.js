@@ -54,6 +54,52 @@ function initializeImagePreviews() {
     });
 }
 
+function initializeCharacterCounters() {
+    document.querySelectorAll("[data-character-counter]").forEach((input) => {
+        const counter = document.querySelector(input.dataset.characterCounter);
+
+        if (!counter) {
+            return;
+        }
+
+        const update = () => {
+            counter.textContent = `${input.value.length} / ${input.maxLength}`;
+        };
+
+        input.addEventListener("input", update);
+        update();
+    });
+}
+
+function initializeCopyButtons() {
+    document.querySelectorAll("[data-copy-target]").forEach((button) => {
+        const input = document.querySelector(button.dataset.copyTarget);
+        const label = button.dataset.copyLabel
+            ? document.querySelector(button.dataset.copyLabel)
+            : null;
+
+        if (!input || !navigator.clipboard) {
+            return;
+        }
+
+        button.addEventListener("click", async () => {
+            try {
+                await navigator.clipboard.writeText(input.value);
+                button.classList.replace("btn-outline-secondary", "btn-success");
+                if (label) label.textContent = "¡Copiado!";
+
+                window.setTimeout(() => {
+                    button.classList.replace("btn-success", "btn-outline-secondary");
+                    if (label) label.textContent = "Copiar";
+                }, 2000);
+            } catch {
+                input.focus();
+                input.select();
+            }
+        });
+    });
+}
+
 function initializeCartSynchronization() {
     const forms = [...document.querySelectorAll(".js-cart-quantity-form")];
     const checkout = document.querySelector("[data-cart-checkout]");
@@ -226,6 +272,8 @@ function initializeReportCharts() {
 function initializeApplication() {
     initializeSidebar();
     initializeImagePreviews();
+    initializeCharacterCounters();
+    initializeCopyButtons();
     initializeCartSynchronization();
     initializeReportCharts();
 }

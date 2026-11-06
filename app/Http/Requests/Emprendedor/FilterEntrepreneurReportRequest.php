@@ -2,10 +2,12 @@
 
 namespace App\Http\Requests\Emprendedor;
 
+use App\Enums\OrderStatus;
 use App\Enums\UserRole;
 use App\Services\Reports\ReportFilters;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class FilterEntrepreneurReportRequest extends FormRequest
@@ -25,6 +27,7 @@ class FilterEntrepreneurReportRequest extends FormRequest
         return [
             'desde' => ['bail', 'nullable', 'string', 'date_format:Y-m-d'],
             'hasta' => ['bail', 'nullable', 'string', 'date_format:Y-m-d'],
+            'estado' => ['bail', 'nullable', Rule::enum(OrderStatus::class)],
         ];
     }
 
@@ -36,6 +39,7 @@ class FilterEntrepreneurReportRequest extends FormRequest
         return [
             'desde' => 'fecha inicial',
             'hasta' => 'fecha final',
+            'estado' => 'estado del pedido',
         ];
     }
 
@@ -49,6 +53,7 @@ class FilterEntrepreneurReportRequest extends FormRequest
             'desde.date_format' => 'La fecha inicial debe tener el formato AAAA-MM-DD.',
             'hasta.string' => 'La fecha final no tiene un formato válido.',
             'hasta.date_format' => 'La fecha final debe tener el formato AAAA-MM-DD.',
+            'estado.enum' => 'Selecciona un estado de pedido válido.',
         ];
     }
 
@@ -91,5 +96,12 @@ class FilterEntrepreneurReportRequest extends FormRequest
             $validated['desde'] ?? null,
             $validated['hasta'] ?? null,
         );
+    }
+
+    public function orderStatus(): ?OrderStatus
+    {
+        $value = $this->validated('estado');
+
+        return is_string($value) && $value !== '' ? OrderStatus::from($value) : null;
     }
 }

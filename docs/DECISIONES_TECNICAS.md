@@ -230,7 +230,7 @@ Decisión confirmada el 29 de octubre de 2026:
 - Exigir y declarar explícitamente en el entorno local y en Integración Continua las extensiones PHP requeridas por ambas librerías: `gd`, `zip`, `dom`, `xml`, `xmlreader`, `xmlwriter`, `simplexml`, `libxml`, `iconv`, `zlib`, `ctype`, `filter` y `mbstring`.
 - Construir las exportaciones del emprendedor a partir del mismo resultado de `EntrepreneurReportService::report()` utilizado en pantalla, sin recalcular totales por separado ni incluir gráficos embebidos dentro de los archivos descargables.
 - Escribir explícitamente como texto (`DataType::TYPE_STRING`) cualquier cadena controlada por usuarios en celdas de Excel para impedir la inyección de fórmulas (`=`, `+`, `-`, `@`), conservando importes y cantidades como valores numéricos.
-- Nota de entorno pendiente de alineación general: `composer.json` mantiene `"php": "^8.2"`, mientras que `composer.lock` exige `php >= 8.4.1` y CI ejecuta PHP 8.5.
+- El requisito de plataforma se alineó en `composer.json` a PHP `^8.4.1`, mínimo efectivo del lockfile; CI y el entorno de cierre usan PHP 8.5.
 
 Motivo: cubrir las exportaciones PDF y Excel requeridas en Fase 3 (DWS-F3-06, INT-15) con paquetes compatibles con PHP 8.4/8.5, verificables automáticamente en PHPUnit y reutilizables sin duplicar consultas de negocio.
 

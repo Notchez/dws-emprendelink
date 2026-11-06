@@ -47,6 +47,9 @@
                                     {{ $producto->estado ? 'Desactivar' : 'Activar' }}
                                 </button>
                             </form>
+                            <button class="btn btn-outline-danger" type="button" data-bs-toggle="modal" data-bs-target="#deleteProduct-{{ $producto->id }}" aria-label="Eliminar {{ $producto->nombre }}">
+                                <i class="bi bi-trash" aria-hidden="true"></i>
+                            </button>
                         </div>
                     </div>
                 </article>
@@ -60,6 +63,19 @@
             </div>
         @endforelse
     </div>
+
+    @foreach($productos as $producto)
+        <div class="modal fade" id="deleteProduct-{{ $producto->id }}" tabindex="-1" aria-labelledby="deleteProductLabel-{{ $producto->id }}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+                <div class="modal-header"><h2 class="modal-title fs-5" id="deleteProductLabel-{{ $producto->id }}">Eliminar producto</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+                <div class="modal-body">¿Deseas eliminar <strong>{{ $producto->nombre }}</strong>? Se conservará en el historial de pedidos.</div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form method="POST" action="{{ route('entrepreneur.products.destroy', $producto) }}">@csrf @method('DELETE')<button class="btn btn-danger" type="submit">Eliminar</button></form>
+                </div>
+            </div></div>
+        </div>
+    @endforeach
 
     <div class="mt-4">{{ $productos->links() }}</div>
 @endsection

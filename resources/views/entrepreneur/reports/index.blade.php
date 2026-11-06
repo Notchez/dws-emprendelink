@@ -11,10 +11,10 @@
             </p>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            <a class="btn btn-outline-primary" href="{{ route('entrepreneur.reports.export.pdf', $filters->toQuery()) }}">
+            <a class="btn btn-outline-primary" href="{{ route('entrepreneur.reports.export.pdf', $query) }}">
                 <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i> Exportar PDF
             </a>
-            <a class="btn btn-outline-primary" href="{{ route('entrepreneur.reports.export.excel', $filters->toQuery()) }}">
+            <a class="btn btn-outline-primary" href="{{ route('entrepreneur.reports.export.excel', $query) }}">
                 <i class="bi bi-file-earmark-excel" aria-hidden="true"></i> Exportar Excel
             </a>
         </div>
@@ -31,7 +31,7 @@
 
     <form class="card card-body mb-4" method="GET" action="{{ route('entrepreneur.reports.index') }}" novalidate>
         <div class="row g-3 align-items-start">
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-3">
                 <label class="form-label" for="desde">Fecha inicial</label>
                 <input
                     class="form-control @error('desde') is-invalid @enderror"
@@ -45,7 +45,7 @@
                 @enderror
             </div>
 
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-3">
                 <label class="form-label" for="hasta">Fecha final</label>
                 <input
                     class="form-control @error('hasta') is-invalid @enderror"
@@ -59,7 +59,18 @@
                 @enderror
             </div>
 
-            <div class="col-12 col-md-4 d-flex flex-wrap gap-2 pt-md-4 mt-md-2">
+            <div class="col-12 col-md-3">
+                <label class="form-label" for="estado">Estado</label>
+                <select class="form-select @error('estado') is-invalid @enderror" id="estado" name="estado">
+                    <option value="">Todos</option>
+                    @foreach($statuses as $option)
+                        <option value="{{ $option->value }}" @selected(old('estado', $status?->value) === $option->value)>{{ $option->value }}</option>
+                    @endforeach
+                </select>
+                @error('estado')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+
+            <div class="col-12 col-md-3 d-flex flex-wrap gap-2 pt-md-4 mt-md-2">
                 <button class="btn btn-primary" type="submit">Aplicar</button>
                 <a class="btn btn-outline-primary" href="{{ route('entrepreneur.reports.index') }}">Restablecer</a>
             </div>

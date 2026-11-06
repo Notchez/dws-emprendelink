@@ -12,6 +12,7 @@ Las comprobaciones se realizan en servidor mediante middleware, Form Requests, P
 | Administrar negocio, categorías y productos | No | No | Propios | Negocios según rutas admin |
 | Cambiar estado de pedido | No | No | De su negocio | Consulta global |
 | Consultar ventas y comisiones | No | No | Propias | Todas |
+| Consultar y exportar reportes | No | No | Solo su negocio | Globales y filtrados |
 | Consultar la cuenta mensual | No | No | Propia | Todas |
 | Marcar un mes cerrado como pagado | No | No | No | Sí, pago mensual completo |
 | Gestionar usuarios y planes | No | No | No | Sí |
