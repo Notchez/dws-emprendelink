@@ -4,7 +4,7 @@
 
 EmprendeLink es una aplicación web monolítica para que microemprendedores administren su catálogo y sus pedidos.
 
-El cliente final puede consultar productos y registrar pedidos sin crear una cuenta.
+El cliente final puede consultar el catálogo sin autenticarse. Para usar el carrito, completar checkout y consultar pedidos debe iniciar sesión con una cuenta activa de cliente.
 
 El proyecto corresponde a DWS901 de la Universidad Don Bosco.
 
@@ -28,10 +28,11 @@ Antes de instalar, diagnosticar errores o programar, leer:
 1. `AGENTS.md`.
 2. `README.md`.
 3. `docs/INSTALACION_LOCAL.md`.
-4. `docs/ARQUITECTURA_FASE_2.md`.
-5. `docs/RESPONSABILIDADES_FASE_2.md`.
+4. `docs/FASE_3_PLAN.md`.
+5. `docs/ARQUITECTURA.md`.
 6. `docs/DECISIONES_TECNICAS.md`.
-7. Documento Maestro y Ruta de Aprendizaje, cuando estén disponibles.
+7. `docs/ROLES_PERMISOS.md`.
+8. Documento Maestro y Ruta de Aprendizaje, cuando estén disponibles.
 
 Si un documento de referencia no está disponible, indicarlo. No afirmar que fue revisado.
 

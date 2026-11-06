@@ -65,9 +65,20 @@
                     >
                 </div>
 
+                
                 <div class="col-12">
                     <label class="form-label" for="descripcion">Descripción</label>
-                    <textarea class="form-control" id="descripcion" name="descripcion" rows="4">{{ old('descripcion', $producto->descripcion) }}</textarea>
+                    <textarea class="form-control" 
+                              id="descripcion" 
+                              name="descripcion" 
+                              rows="4" 
+                              maxlength="2000"
+                              data-character-counter="#product-char-count"
+                              style="resize: none;">{{ old('descripcion', $producto->descripcion) }}</textarea>
+                    <div class="d-flex justify-content-between mt-1">
+                        <small class="text-muted">Descripción del producto (máximo 2000 caracteres).</small>
+                        <small class="text-muted" id="product-char-count" aria-live="polite">0 / 2000</small>
+                    </div>
                 </div>
 
                 <div class="col-12">

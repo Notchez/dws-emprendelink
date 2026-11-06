@@ -212,7 +212,7 @@ Los cambios se guardan en MySQL, los productos inactivos dejan de aparecer en el
 
 - Implementar selección de productos y cantidades.
 - Preparar el resumen previo a la confirmación.
-- Implementar registro de pedidos sin cuenta de cliente.
+- Regla histórica reemplazada en la implementación vigente: el checkout y el registro de pedidos requieren una cuenta activa con rol cliente; únicamente el catálogo permanece público.
 - Validar datos de contacto.
 - Validar modalidad de entrega.
 - Exigir dirección cuando la modalidad sea domicilio.

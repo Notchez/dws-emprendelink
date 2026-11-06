@@ -8,17 +8,18 @@ Debe leerse antes de generar o modificar código.
 
 - Asignatura: DWS901.
 - Proyecto: EmprendeLink.
-- Fase: Desarrollo Back-End y Persistencia, Sprint II.
+- Fase: Integración Full Stack y Release Candidate, Sprint III.
 - Tecnologías: PHP 8.5, Laravel 12, MySQL 8, Blade, AdminLTE 4 y Vite.
-- El cliente final puede consultar catálogos y registrar pedidos sin crear una cuenta.
+- El catálogo es público. El carrito, checkout y seguimiento de pedidos requieren una cuenta activa con rol cliente.
 
 ## Documentos de referencia
 
 1. Documento Maestro aprobado.
 2. Ruta de Aprendizaje de DWS.
-3. `docs/ARQUITECTURA_FASE_2.md`.
-4. `docs/RESPONSABILIDADES_FASE_2.md`.
+3. `docs/FASE_3_PLAN.md`.
+4. `docs/ARQUITECTURA.md`.
 5. `docs/DECISIONES_TECNICAS.md`.
+6. `docs/ROLES_PERMISOS.md`.
 
 Si existe una contradicción:
 
@@ -29,23 +30,19 @@ Si existe una contradicción:
 
 Los cambios de alcance autorizados expresamente por el responsable deben reflejarse en la documentación.
 
-## Alcance de Fase 2
+## Alcance de Fase 3
 
 Priorizar:
 
-- Configuración reproducible.
-- Arquitectura organizada.
-- Rutas y controladores.
-- Validaciones.
-- Servicios y reglas de negocio.
-- Persistencia MySQL.
-- Autenticación y autorización.
-- CRUD de módulos prioritarios.
-- Pruebas y evidencia de funcionamiento.
+- Integración completa de los módulos existentes.
+- Reportes del emprendedor y reportes administrativos.
+- Gráficos y exportaciones PDF/XLSX.
+- Corrección de defectos de integración, seguridad y accesibilidad.
+- Pruebas automatizadas y evidencia real de verificación.
 
 AdminLTE 4 es la plantilla visual acordada.
 
-No adelantar reportes completos, exportaciones, pagos o funcionalidades adicionales sin una prioridad explícita del sprint.
+No incorporar pagos en línea, facturación fiscal, chat u otras funcionalidades excluidas del alcance.
 
 Mantener las exclusiones del Documento Maestro.
 

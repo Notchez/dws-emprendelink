@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\CommissionController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EmprendimientoController;
 use App\Http\Controllers\Admin\PlanController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +24,9 @@ Route::middleware(['auth', 'active', 'role:admin'])->prefix('admin')->name('admi
     Route::get('/pedidos', [DashboardController::class, 'orders'])->name('pedidos.index');
     Route::get('/pedidos/{pedido}', [DashboardController::class, 'order'])->name('pedidos.show');
     Route::get('/comisiones', [CommissionController::class, 'index'])->name('comisiones.index');
+    Route::get('/reportes', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reportes/exportar/pdf', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
+    Route::get('/reportes/exportar/excel', [ReportController::class, 'exportExcel'])->name('reports.export.excel');
     Route::patch('/estados-cuenta/{estadoCuenta}/pagar', [CommissionController::class, 'pay'])
         ->name('account-statements.pay');
 });

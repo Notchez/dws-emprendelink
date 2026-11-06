@@ -28,6 +28,7 @@ const PRIMARY = "#2563EB";
 const PRIMARY_BORDER = "#1D4ED8";
 const SECONDARY_TEXT = "#6B7280";
 const GRID_COLOR = "#E5E7EB";
+const PLAN_COLORS = ["#2563EB", "#14B8A6", "#8B5CF6", "#F59E0B", "#EC4899", "#64748B"];
 
 const STATUS_COLORS = {
     Pendiente: "#F59E0B",
@@ -131,6 +132,35 @@ const builders = {
 
                             return `${ctx.label}: ${count} ${count === 1 ? "pedido" : "pedidos"}`;
                         },
+                    },
+                },
+            },
+        },
+    }),
+
+    plans: (data) => ({
+        type: "doughnut",
+        data: {
+            labels: data.etiquetas,
+            datasets: [
+                {
+                    data: data.valores,
+                    backgroundColor: data.etiquetas.map((_, index) => PLAN_COLORS[index % PLAN_COLORS.length]),
+                    borderColor: "#FFFFFF",
+                    borderWidth: 2,
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            cutout: "58%",
+            plugins: {
+                legend: { position: "bottom", labels: { boxWidth: 12, padding: 12 } },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => `${ctx.label}: ${ctx.parsed ?? 0} emprendimientos`,
                     },
                 },
             },

@@ -16,7 +16,7 @@ class DetallePedido extends Model
         'producto_id',
         'cantidad',
         'precio_unitario',
-        'subtotal'
+        'subtotal',
     ];
 
     protected $casts = [
@@ -32,6 +32,6 @@ class DetallePedido extends Model
 
     public function producto()
     {
-        return $this->belongsTo(Producto::class);
+        return $this->belongsTo(Producto::class)->withTrashed();
     }
 }

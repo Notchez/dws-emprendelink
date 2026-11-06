@@ -1,98 +1,126 @@
 # EmprendeLink
 
-EmprendeLink es una plataforma académica de DWS901 para que emprendimientos publiquen productos, administren pedidos y consulten ventas y comisiones. El catálogo es público; el carrito, checkout y seguimiento de pedidos requieren una cuenta de cliente.
+EmprendeLink es una plataforma académica de DWS901 para que emprendimientos publiquen
+productos, administren pedidos y consulten ventas y comisiones. El catálogo es público;
+el carrito, checkout y seguimiento de pedidos requieren una cuenta activa con rol cliente.
 
 ## Tecnología
 
-- PHP 8.2 o superior (entorno objetivo: PHP 8.5) y Laravel 12.
-- MySQL 8, Eloquent, Blade, Form Requests, Services y Policies.
-- Bootstrap 5, AdminLTE 4, Bootstrap Icons, Inter y Vite.
+- PHP `^8.4.1` (entorno verificado: PHP 8.5) y Laravel 12.
+- MySQL 8, Composer 2, Eloquent, Blade, Form Requests, Services y Policies.
+- Node.js, npm, Vite, Bootstrap 5, AdminLTE 4 y Chart.js.
 - PHPUnit 11 sobre una base MySQL de pruebas aislada.
 
-## Requisitos
+PHP debe incluir las extensiones requeridas por Laravel y por las exportaciones del
+proyecto, especialmente `pdo_mysql`, `mbstring`, `xml`, `gd` y `zip`.
 
-PHP con PDO MySQL, Mbstring, OpenSSL, XML, Ctype, Fileinfo y Tokenizer; Composer 2; MySQL 8; Node.js/npm; y Git.
+## Instalación rápida en Windows
 
-## Instalación local
-
-```bash
+```powershell
 composer install
-copy .env.example .env
+npm ci
+Copy-Item .env.example .env
 php artisan key:generate
-npm install
 ```
 
-Configure en `.env` la conexión MySQL (`DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME` y `DB_PASSWORD`) y después ejecute:
+Cree una base MySQL local y configure en `.env` sus valores `DB_HOST`, `DB_PORT`,
+`DB_DATABASE`, `DB_USERNAME` y `DB_PASSWORD`. Después ejecute:
 
-```bash
+```powershell
+php artisan config:clear
 php artisan migrate
 php artisan db:seed
+php artisan db:seed --class="Database\Seeders\DemoShowcaseSeeder"
 php artisan storage:link
 npm run build
-php artisan serve
+php artisan serve --no-reload
 ```
 
-Para desarrollo con recarga de recursos, use `npm run dev` en otra terminal. Las imágenes se guardan en `storage/app/public` y la base conserva únicamente su ruta relativa.
+`DatabaseSeeder` instala planes, cuentas base y los datos mínimos. El seeder showcase es
+deliberadamente independiente, idempotente y solo admite los entornos `local` y `testing`.
+Genera 20 pedidos históricos y 22 ilustraciones SVG en
+`storage/app/public/demo-showcase`; no debe añadirse a `DatabaseSeeder`.
 
-## Datos de demostración
+La guía completa, incluidos MySQL, extensiones PHP y solución de errores, está en
+[Instalación local](docs/INSTALACION_LOCAL.md).
 
-`php artisan db:seed` crea usuarios de demostración con contraseña `password`:
+## Cuentas de demostración
 
-| Rol | Correo |
-| --- | --- |
-| Administrador | `admin@emprendelink.test` |
-| Emprendedor | `emprendedor@emprendelink.test` |
-| Cliente | `cliente@emprendelink.test` |
+Todas usan la contraseña local `password`.
 
-Son datos locales; no deben utilizarse en producción.
+| Rol | Correo | Datos creados por |
+| --- | --- | --- |
+| Administrador | `admin@emprendelink.test` | `DatabaseSeeder` |
+| Emprendedor | `emprendedor@emprendelink.test` | `DatabaseSeeder` |
+| Cliente | `cliente@emprendelink.test` | `DatabaseSeeder` |
+| Emprendedor | `miguel.portillo@emprendelink.test` | `DemoShowcaseSeeder` |
+| Emprendedor | `rosa.aguilar@emprendelink.test` | `DemoShowcaseSeeder` |
+| Emprendedor | `diego.morales@emprendelink.test` | `DemoShowcaseSeeder` |
+| Cliente | `ana.martinez@emprendelink.test` | `DemoShowcaseSeeder` |
+| Cliente | `carlos.hernandez@emprendelink.test` | `DemoShowcaseSeeder` |
+| Cliente | `sofia.ramirez@emprendelink.test` | `DemoShowcaseSeeder` |
 
-## Pruebas
+Estas credenciales son exclusivamente locales y nunca deben utilizarse en producción.
 
-La suite usa `dws_emprendelink_test` como valor local predeterminado en `phpunit.xml`, para impedir que `RefreshDatabase` opere sobre la base de desarrollo. Cree esa base vacía y conceda al usuario configurado permisos sobre ella. Las variables de entorno explícitas tienen prioridad, por lo que CI utiliza su base aislada `emprendelink_testing`.
+## Pruebas y protección de datos
 
-```bash
+La suite usa `dws_emprendelink_test` desde `phpunit.xml`. Cree esa base vacía por
+separado y conceda permisos al usuario local de MySQL:
+
+```sql
+CREATE DATABASE dws_emprendelink_test
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+```
+
+```powershell
 php artisan test
 ```
 
-Nunca apunte la configuración de testing a la base normal. La clase base de pruebas rechaza nombres que no terminen en `_test` o `_testing`. Las pruebas cubren autenticación, roles, propiedad de recursos, catálogo, carrito, checkout transaccional e idempotente, pedidos, comisiones, administración e imágenes.
+La clase base de pruebas detiene la suite si el nombre no termina en `_test` o
+`_testing`. Nunca apunte PHPUnit a la base de desarrollo o producción. No ejecute
+`migrate:fresh`, `db:wipe` ni seeders de demostración sobre bases con datos reales.
+
+## Verificación de entrega
+
+```powershell
+composer validate --strict
+composer check-platform-reqs
+composer audit
+php artisan test
+npm run build
+npm audit
+git diff --check
+```
 
 ## Estructura
 
 | Ubicación | Responsabilidad |
 | --- | --- |
-| `routes/` | Endpoints públicos, de autenticación, admin y emprendedor |
-| `app/Http/Controllers` | Coordinación HTTP |
-| `app/Http/Requests` | Validación y autorización de entradas |
-| `app/Http/Middleware` | Sesión activa y control de roles |
+| `routes/` | Endpoints públicos, cliente, emprendedor y administrador |
+| `app/Http` | Controladores, middleware, validación y autorización |
 | `app/Policies` | Propiedad y permisos sobre recursos |
-| `app/Services` | Transacciones y reglas de negocio |
-| `app/Models` y `app/Enums` | Modelo Eloquent y estados del dominio |
-| `resources/views` | Interfaz Blade responsive |
-| `resources/css/adminlte.css` | Estilos compartidos de EmprendeLink |
+| `app/Services` | Transacciones, reportes y reglas de negocio |
+| `app/Models` y `app/Enums` | Entidades y estados del dominio |
+| `resources/` | Interfaz Blade y recursos compilados con Vite |
 | `database/` | Migraciones, factories y seeders |
 | `tests/` | Pruebas unitarias y funcionales |
 
-## Verificación
-
-```bash
-composer dump-autoload
-php artisan optimize:clear
-php artisan route:list
-php artisan migrate:status
-php artisan test
-npm run build
-```
-
 ## Documentación
 
+- [Instalación local](docs/INSTALACION_LOCAL.md)
+- [Datos showcase](docs/DEMO_SHOWCASE.md)
 - [Arquitectura](docs/ARQUITECTURA.md)
+- [Plan de Fase 3](docs/FASE_3_PLAN.md)
 - [Roles y permisos](docs/ROLES_PERMISOS.md)
 - [Rutas](docs/RUTAS.md)
-- [Modelo de negocio](docs/MODELO_NEGOCIO.md)
-- [Matriz de pruebas](docs/MATRIZ_PRUEBAS.md)
 - [Decisiones técnicas](docs/DECISIONES_TECNICAS.md)
-- [Instalación local ampliada](docs/INSTALACION_LOCAL.md)
+- [Matriz de pruebas](docs/FASE_3_MATRIZ_PRUEBAS.md)
+- [Defectos](docs/FASE_3_DEFECTOS.md)
 
 ## Alcance
 
-La Fase 2 incluye catálogo, cuentas y roles, perfiles, negocios, planes, categorías, productos, carrito, checkout, pedidos, historial, ventas y comisiones. No incluye pagos en línea, facturación fiscal, chat, aplicación móvil nativa ni exportaciones avanzadas.
+La Fase 3 integra autenticación y roles, perfiles, emprendimientos, planes, categorías,
+productos, carrito, checkout autenticado, pedidos, historial, ventas, comisiones y
+reportes de administrador y emprendedor con gráficos y exportaciones PDF/XLSX. No
+incluye pagos en línea, facturación fiscal, chat ni aplicación móvil nativa.

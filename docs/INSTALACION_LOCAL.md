@@ -1,221 +1,281 @@
 # Instalación local de EmprendeLink
 
-Guía para Windows con PowerShell.
+Guía reproducible para Windows con PowerShell. Los ejemplos asumen una instalación
+local de MySQL y una rama que ya contiene la Fase 3.
 
-Usar una rama que ya contenga la base compartida de Fase 2. Los comandos
-de clonación siguientes asumen que esa base ya fue integrada en develop.
+## 1. Requisitos
 
-## 1. Herramientas necesarias
+| Herramienta | Requisito |
+| --- | --- |
+| PHP | `^8.4.1`; el proyecto fue verificado con PHP 8.5 y Laravel Herd |
+| Composer | 2.x |
+| Laravel | 12, instalado por Composer |
+| MySQL | 8.x |
+| Node.js y npm | Versiones compatibles con el `package-lock.json` |
+| Git | Versión estable |
 
-| Herramienta  | Versión del entorno de trabajo | Uso                                                                 |
-| ------------ | ------------------------------ | ------------------------------------------------------------------- |
-| PHP          | 8.5.x                          | Ejecutar Laravel y Artisan.                                         |
-| Composer     | 2.x                            | Instalar las dependencias PHP.                                      |
-| Node.js      | 24 LTS                         | Ejecutar Vite y compilar los recursos visuales.                     |
-| npm          | 12.x                           | Instalar dependencias del frontend y gestionar permisos de scripts. |
-| MySQL Server | 8.x; recomendado 8.4 LTS       | Base de datos del proyecto.                                         |
-| Git          | Versión estable                | Obtener el repositorio y trabajar con ramas.                        |
+PHP necesita las extensiones habituales de Laravel y, como mínimo para este proyecto,
+`pdo_mysql`, `mbstring`, `openssl`, `ctype`, `fileinfo`, `xml`, `dom`, `gd`, `zip`,
+`iconv`, `libxml`, `SimpleXML`, `XMLReader`, `XMLWriter` y `zlib`.
 
-Descargas oficiales:
-
-- PHP: https://www.php.net/downloads.php
-- Composer: https://getcomposer.org/download/
-- Node.js: https://nodejs.org/en/download
-- MySQL Server: https://dev.mysql.com/downloads/mysql/8.4.html
-- Git: https://git-scm.com/downloads
-
-Node.js incluye npm. Si la instalación trae una versión anterior a npm 12,
-actualizar para usar el entorno indicado en esta guía:
-
-```powershell
-npm install -g npm@12
-```
-
-PHP debe tener las extensiones requeridas por Laravel:
-Ctype, cURL, DOM, Fileinfo, Filter, Hash, Mbstring, OpenSSL, PCRE,
-PDO, Session, Tokenizer y XML.
-
-Para conectar con MySQL se necesita además pdo_mysql.
-Para la exportación de reportes en PDF y Excel se requieren también gd,
-zip, iconv, libxml, SimpleXML, XMLReader, XMLWriter y zlib.
-
-Consultar las extensiones activas:
-
-```powershell
-php -m
-```
-
-VS Code es el editor recomendado. MySQL Workbench es opcional para
-administrar la base; se necesita el servidor MySQL funcionando.
-
-Comprobar las herramientas en una terminal nueva:
+Compruebe el entorno antes de instalar:
 
 ```powershell
 php -v
+php -m
 composer --version
 node -v
 npm -v
 git --version
 ```
 
-Laravel y PHPUnit se descargan mediante Composer.
-AdminLTE, Bootstrap, iconos, tipografía y las demás dependencias visuales
-se descargan mediante npm.
-
-## 2. Obtener el proyecto e instalar sus dependencias
-
-Para una copia nueva:
+Con Laravel Herd, confirme que la terminal usa su PHP y que GD está disponible:
 
 ```powershell
-git clone --branch develop https://github.com/Notchez/dws-emprendelink.git
-cd dws-emprendelink
-composer install
-npm ci
+php -r "echo PHP_VERSION, PHP_EOL; var_export(extension_loaded('gd'));"
 composer check-platform-reqs
 ```
 
-composer install y npm ci usan las versiones registradas en composer.lock
-y package-lock.json.
-
-Las actualizaciones de dependencias deben acordarse con quien mantiene
-la base del proyecto.
-
-El permiso de instalación de esbuild debe estar registrado en allowScripts,
-dentro de package.json.
-
-Si npm muestra un aviso para esbuild, revisar y autorizar ese paquete:
+## 2. Obtener el proyecto e instalar dependencias
 
 ```powershell
-npm install-scripts ls
-npm install-scripts approve esbuild
-npm rebuild esbuild
+git clone https://github.com/Notchez/dws-emprendelink.git
+Set-Location dws-emprendelink
+git switch develop
+composer install
+npm ci
 ```
 
-## 3. Preparar la configuración local
+`composer install` y `npm ci` respetan exactamente `composer.lock` y
+`package-lock.json`. No use `composer update` ni `npm audit fix --force` como parte de
+la instalación normal.
 
-Crear .env y generar la clave de la aplicación únicamente si todavía
-no existe ese archivo:
+## 3. Configurar `.env`
 
 ```powershell
-if (-not (Test-Path .env)) {
-    Copy-Item .env.example .env
+if (-not (Test-Path -LiteralPath '.env')) {
+    Copy-Item -LiteralPath '.env.example' -Destination '.env'
     php artisan key:generate
 }
 ```
 
-Cada integrante conserva su propio .env y sus credenciales locales.
-Si ya existe, editarlo sin reemplazarlo.
-
-La clave APP_KEY se genera una vez por instalación.
-
-En .env, establecer estas opciones. Reemplazar DB_USERNAME y DB_PASSWORD
-con las credenciales de la instalación local de MySQL:
+Configure una base de desarrollo exclusivamente local:
 
 ```dotenv
 APP_NAME=EmprendeLink
 APP_ENV=local
 APP_DEBUG=true
 APP_URL=http://127.0.0.1:8000
-APP_LOCALE=es
-APP_FALLBACK_LOCALE=en
-APP_FAKER_LOCALE=es_ES
 
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=emprendelink
-DB_USERNAME=TU_USUARIO_MYSQL
-DB_PASSWORD="TU_CONTRASENA_MYSQL"
+DB_DATABASE=dws_emprendelink
+DB_USERNAME=TU_USUARIO_LOCAL
+DB_PASSWORD="TU_CONTRASENA_LOCAL"
 
 SESSION_DRIVER=database
 CACHE_STORE=database
 QUEUE_CONNECTION=sync
 FILESYSTEM_DISK=local
 MAIL_MAILER=log
-PHP_CLI_SERVER_WORKERS=1
 ```
 
-Conservar la APP_KEY generada.
-El archivo .env es local y está excluido de Git.
+No copie credenciales reales al repositorio. `.env`, `.env.production` y respaldos del
+entorno están excluidos por `.gitignore`.
 
-## 4. Crear la base de datos
+## 4. Crear las bases MySQL
 
-Con MySQL Server iniciado, ejecutar este SQL en MySQL Workbench
-o en el cliente MySQL:
+Ejecute en MySQL Workbench o en el cliente MySQL:
 
 ```sql
-CREATE DATABASE IF NOT EXISTS emprendelink
+CREATE DATABASE IF NOT EXISTS dws_emprendelink
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+
+CREATE DATABASE IF NOT EXISTS dws_emprendelink_test
 CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
 ```
 
-Luego, desde la raíz del proyecto:
+La primera es para uso manual. La segunda es exclusiva para PHPUnit. El usuario local
+de MySQL debe tener permisos sobre ambas.
+
+Confirme el entorno y la conexión antes de escribir datos:
 
 ```powershell
+php artisan env
 php artisan config:clear
+php artisan migrate:status
+```
+
+## 5. Migraciones y datos iniciales
+
+En una instalación nueva y vacía:
+
+```powershell
 php artisan migrate
+php artisan db:seed
 ```
 
-Las migraciones crean las tablas disponibles en esa rama.
+`DatabaseSeeder` crea los planes, las tres cuentas base, Manos Creativas y un pedido
+mínimo. No ejecuta el showcase automáticamente.
 
-La Parte 2 entrega las migraciones y los seeders del negocio.
-La base inicial por sí sola no implica que productos, pedidos
-o cuentas de demostración estén implementados.
-
-## 5. Compilar y abrir la aplicación
+Para cargar el escenario completo de Fase 3:
 
 ```powershell
-npm run build
-php artisan serve
+php artisan db:seed --class="Database\Seeders\DemoShowcaseSeeder"
 ```
 
-Abrir http://127.0.0.1:8000 y mantener abierta la terminal del servidor.
+`DemoShowcaseSeeder`:
 
-Para trabajar en estilos y JavaScript con actualización automática,
-abrir una segunda terminal en la raíz del proyecto y ejecutar:
+- solo funciona con `APP_ENV=local` o `testing`;
+- es determinista e idempotente;
+- conserva los registros existentes;
+- genera 20 pedidos entre julio y el 6 de noviembre de 2026;
+- genera comisiones con los servicios reales del dominio;
+- crea 22 SVG locales en `storage/app/public/demo-showcase`.
 
-```powershell
-npm run dev
-```
+Puede ejecutarlo una segunda vez para comprobar la idempotencia: los pedidos y las
+comisiones no deben aumentar. Consulte [DEMO_SHOWCASE.md](DEMO_SHOWCASE.md) para el
+detalle del conjunto.
 
-La página se abre en el puerto de Laravel, normalmente 8000.
-La terminal de Vite debe permanecer abierta mientras se usa ese modo
-de desarrollo.
-
-Detener los procesos con Ctrl+C.
-
-## 6. Archivos e imágenes de los módulos
-
-Al habilitar la carga pública de imágenes de productos y negocios:
+## 6. Almacenamiento público y SVG
 
 ```powershell
 php artisan storage:link
 ```
 
-Los módulos deben guardar las imágenes públicas en el disco public de Laravel.
-El enlace permite servirlas desde public/storage.
+El enlace `public/storage` permite servir logos y productos guardados en el disco
+`public`. Después de ejecutar el showcase en una instalación nueva, compruebe:
 
-## 7. Antes de implementar un módulo
+```powershell
+(Get-ChildItem -LiteralPath 'storage\app\public\demo-showcase' -Recurse -File -Filter '*.svg').Count
+Test-Path -LiteralPath 'public\storage\demo-showcase'
+```
 
-Leer:
+El resultado esperado es `22` y `True`. Los SVG se regeneran desde
+`DemoShowcaseSeeder.php`; no es necesario versionar los archivos generados.
 
-- AGENTS.md
-- docs/LLM_GUIDE.md
-- docs/ARQUITECTURA_FASE_2.md
-- docs/RESPONSABILIDADES_FASE_2.md
+## 7. Compilar e iniciar en Windows
 
-Reglas de trabajo:
+```powershell
+npm run build
+php artisan serve --no-reload
+```
 
-- Trabajar en una rama propia creada desde develop actualizado.
-- Conservar los nombres y ubicaciones de las clases compartidas.
-- La Parte 3 implementa autenticación, roles y autorización.
-- Cada módulo aplica esos controles y limita sus consultas al propietario correspondiente.
-- Los elementos deshabilitados de la vista inicial indican funciones pendientes.
-- Los métodos que lanzan LogicException con el texto "Pendiente" son puntos de implementación del responsable indicado.
-- Cada módulo conecta sus rutas cuando su implementación y controles estén listos.
+Abra `http://127.0.0.1:8000`. En Windows se usa `--no-reload` para evitar que el
+servidor de desarrollo reinicie procesos repetidamente al detectar archivos generados.
 
-Compartir el código, composer.lock, package-lock.json y la configuración
-allowScripts de package.json.
+Para trabajar con recarga de CSS y JavaScript, ejecute en otra terminal:
 
-vendor, node_modules y .env se reconstruyen o configuran localmente
-y permanecen excluidos de Git.
+```powershell
+npm run dev
+```
+
+Mantenga también `php artisan serve --no-reload` activo. Detenga ambos procesos con
+`Ctrl+C`.
+
+## 8. Cuentas de demostración
+
+Todas usan la contraseña `password` y son únicamente para el entorno local.
+
+| Rol | Correo | Seeder |
+| --- | --- | --- |
+| Administrador | `admin@emprendelink.test` | Base |
+| Emprendedor | `emprendedor@emprendelink.test` | Base |
+| Cliente | `cliente@emprendelink.test` | Base |
+| Emprendedor | `miguel.portillo@emprendelink.test` | Showcase |
+| Emprendedor | `rosa.aguilar@emprendelink.test` | Showcase |
+| Emprendedor | `diego.morales@emprendelink.test` | Showcase |
+| Cliente | `ana.martinez@emprendelink.test` | Showcase |
+| Cliente | `carlos.hernandez@emprendelink.test` | Showcase |
+| Cliente | `sofia.ramirez@emprendelink.test` | Showcase |
+
+## 9. Pruebas y protección de bases
+
+`phpunit.xml` configura `dws_emprendelink_test`. Además, `Tests\TestCase` rechaza
+cualquier nombre que no termine en `_test` o `_testing`.
+
+```powershell
+php artisan test
+```
+
+Antes de ejecutar pruebas, verifique que ninguna variable de entorno del sistema
+sobrescriba `DB_DATABASE`. Nunca use la base de desarrollo o producción para PHPUnit.
+
+No ejecute estos comandos sobre bases con información que deba conservarse:
+
+```text
+php artisan migrate:fresh
+php artisan db:wipe
+php artisan migrate:refresh
+```
+
+El showcase también está prohibido en producción y contiene credenciales públicas de
+demostración.
+
+## 10. Errores comunes
+
+### `ext-gd` o `ext-zip` no disponible
+
+Compruebe qué PHP usa Composer con `php --ini` y `php -m`. Active la extensión en ese
+`php.ini` o seleccione una versión de Herd que la incluya; cierre y abra la terminal y
+repita `composer check-platform-reqs`.
+
+### MySQL rechaza la conexión
+
+Confirme que el servicio está iniciado, que `DB_HOST=127.0.0.1`, que la base existe y
+que el usuario tiene permisos. Después ejecute `php artisan config:clear`.
+
+### `No application encryption key has been specified`
+
+```powershell
+php artisan key:generate
+php artisan config:clear
+```
+
+### Las imágenes devuelven 404
+
+```powershell
+php artisan storage:link
+php artisan config:clear
+```
+
+Compruebe que el archivo exista bajo `storage/app/public` y que `public/storage` sea un
+enlace válido. Si el enlace ya existe y apunta al destino correcto, no necesita crearlo
+de nuevo.
+
+### Vite o esbuild no compila
+
+No reutilice un `node_modules` de otra versión de Node. Ejecute `npm ci` y luego
+`npm run build`. El permiso de `esbuild` está registrado en `package.json`.
+
+### El servidor Laravel se reinicia continuamente en Windows
+
+Inícielo con:
+
+```powershell
+php artisan serve --no-reload
+```
+
+### El seeder no encuentra planes o Manos Creativas
+
+Ejecute primero `php artisan db:seed`. El showcase se mantiene separado
+intencionalmente y no reconstruye los datos base.
+
+## 11. Validación de una instalación
+
+```powershell
+composer validate --strict
+composer check-platform-reqs
+composer audit
+php artisan route:list
+php artisan test
+npm run build
+npm audit
+git diff --check
+```
+
+Las pruebas destructivas operan únicamente sobre `dws_emprendelink_test`. Los seeders
+de demostración se ejecutan manualmente solo en la base local de desarrollo.
