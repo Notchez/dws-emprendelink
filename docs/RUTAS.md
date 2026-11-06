@@ -28,10 +28,10 @@ Prefijo `/emprendedor`, nombre `entrepreneur.*`, middleware `auth`, `active` y `
 
 - Panel y negocio: `/emprendedor`, `/emprendedor/negocio`.
 - Categorías: listado, creación, actualización y baja lógica.
-- Productos: listado, alta, edición y activación/desactivación.
+- Productos: listado, alta, edición, activación/desactivación y baja lógica (`DELETE /emprendedor/productos/{producto}`).
 - Pedidos: listado, detalle y transición de estado.
 - Ventas y cuenta mensual: consultas del emprendimiento autenticado. `/emprendedor/comisiones` usa un selector `YYYY-MM` y no permite modificaciones.
-- Reportes: `GET /emprendedor/reportes` (`entrepreneur.reports.index`) consulta indicadores, gráficos, pedidos por estado, ventas por período y ranking de productos del emprendimiento autenticado con filtro `desde`/`hasta`; `GET /emprendedor/reportes/exportar/pdf` (`entrepreneur.reports.export.pdf`) y `GET /emprendedor/reportes/exportar/excel` (`entrepreneur.reports.export.excel`) exportan el reporte en PDF y XLSX.
+- Reportes: `GET /emprendedor/reportes` (`entrepreneur.reports.index`) consulta indicadores, gráficos, pedidos por estado, ventas por período y ranking de productos del emprendimiento autenticado con filtros `desde`, `hasta` y `estado`; las rutas `/exportar/pdf` y `/exportar/excel` reutilizan los mismos filtros.
 
 ## Administración
 
@@ -42,6 +42,7 @@ Prefijo `/admin`, nombre `admin.*`, middleware `auth`, `active` y `role:admin`.
 - CRUD de planes sin borrado físico y endpoint dedicado de activación/desactivación.
 - Consulta global de pedidos.
 - `/admin/comisiones`: cargos mensuales consolidados por emprendimiento.
+- `/admin/reportes`: indicadores, gráficos y filtros globales; `/admin/reportes/exportar/pdf` y `/admin/reportes/exportar/excel` generan los archivos con el mismo resultado filtrado.
 - `PATCH /admin/estados-cuenta/{estadoCuenta}/pagar`: pago atómico de un mes cerrado completo.
 
 No existe un endpoint para pagar o anular una comisión individual.

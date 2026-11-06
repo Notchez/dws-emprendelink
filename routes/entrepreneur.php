@@ -9,27 +9,27 @@ use App\Http\Controllers\Emprendedor\ProductController;
 use App\Http\Controllers\Emprendedor\ReportController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth','active','role:emprendedor'])->prefix('emprendedor')->name('entrepreneur.')->group(function () {
+Route::middleware(['auth', 'active', 'role:emprendedor'])->prefix('emprendedor')->name('entrepreneur.')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
-    Route::get('/negocio', [BusinessController::class,'show'])->name('business.show');
-    Route::put('/negocio/{emprendimiento}', [BusinessController::class,'update'])->name('business.update');
-    Route::get('/categorias', [CategoryController::class,'index'])->name('categories.index');
-    Route::post('/categorias', [CategoryController::class,'store'])->name('categories.store');
-    Route::put('/categorias/{categoria}', [CategoryController::class,'update'])->name('categories.update');
-    Route::delete('/categorias/{categoria}', [CategoryController::class,'destroy'])->name('categories.destroy');
+    Route::get('/negocio', [BusinessController::class, 'show'])->name('business.show');
+    Route::put('/negocio/{emprendimiento}', [BusinessController::class, 'update'])->name('business.update');
+    Route::get('/categorias', [CategoryController::class, 'index'])->name('categories.index');
+    Route::post('/categorias', [CategoryController::class, 'store'])->name('categories.store');
+    Route::put('/categorias/{categoria}', [CategoryController::class, 'update'])->name('categories.update');
+    Route::delete('/categorias/{categoria}', [CategoryController::class, 'destroy'])->name('categories.destroy');
     Route::resource('productos', ProductController::class)
-        ->parameters(['productos'=>'producto'])
+        ->parameters(['productos' => 'producto'])
         ->names([
-            'index'=>'products.index', 'create'=>'products.create', 'store'=>'products.store',
-            'edit'=>'products.edit', 'update'=>'products.update',
-        ])->except(['show','destroy']);
-    Route::patch('/productos/{producto}/estado', [ProductController::class,'status'])->name('products.status');
-    Route::get('/pedidos', [OrderController::class,'index'])->name('orders.index');
-    Route::get('/pedidos/{pedido}', [OrderController::class,'show'])->name('orders.show');
-    Route::patch('/pedidos/{pedido}/estado', [OrderController::class,'status'])->name('orders.status');
-    Route::get('/ventas', [CommissionController::class,'sales'])->name('sales.index');
+            'index' => 'products.index', 'create' => 'products.create', 'store' => 'products.store',
+            'edit' => 'products.edit', 'update' => 'products.update', 'destroy' => 'products.destroy',
+        ])->except(['show']);
+    Route::patch('/productos/{producto}/estado', [ProductController::class, 'status'])->name('products.status');
+    Route::get('/pedidos', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/pedidos/{pedido}', [OrderController::class, 'show'])->name('orders.show');
+    Route::patch('/pedidos/{pedido}/estado', [OrderController::class, 'status'])->name('orders.status');
+    Route::get('/ventas', [CommissionController::class, 'sales'])->name('sales.index');
     Route::get('/reportes', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reportes/exportar/pdf', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
     Route::get('/reportes/exportar/excel', [ReportController::class, 'exportExcel'])->name('reports.export.excel');
-    Route::get('/comisiones', [CommissionController::class,'index'])->name('commissions.index');
+    Route::get('/comisiones', [CommissionController::class, 'index'])->name('commissions.index');
 });

@@ -6,6 +6,7 @@ use App\Enums\CommissionStatus;
 use App\Enums\OrderStatus;
 use App\Models\Emprendimiento;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 class EntrepreneurReportService
@@ -23,18 +24,18 @@ class EntrepreneurReportService
      *     topProductos: list<array{producto_id: int, nombre: string, unidades: int, ingresos: string}>
      * }
      */
-    public function report(Emprendimiento $business, ReportFilters $filters): array
+    public function report(Emprendimiento $business, ReportFilters $filters, ?OrderStatus $status = null): array
     {
-        [$pedidosPorEstado, $totalPedidos] = $this->ordersByStatus($business, $filters);
+        [$pedidosPorEstado, $totalPedidos] = $this->ordersByStatus($business, $filters, $status);
 
         return [
             'pedidosPorEstado' => $pedidosPorEstado,
             'totalPedidos' => $totalPedidos,
-            'ventas' => $this->deliveredSales($business, $filters),
-            'comisiones' => $this->commissions($business, $filters),
-            'ventasPorPeriodo' => $this->salesByPeriod($business, $filters),
+            'ventas' => $this->deliveredSales($business, $filters, $status),
+            'comisiones' => $this->commissions($business, $filters, $status),
+            'ventasPorPeriodo' => $this->salesByPeriod($business, $filters, $status),
             'granularidad' => $filters->groupsByDay() ? 'dia' : 'mes',
-            'topProductos' => $this->topProducts($business, $filters, self::TOP_PRODUCTS_LIMIT),
+            'topProductos' => $this->topProducts($business, $filters, self::TOP_PRODUCTS_LIMIT, $status),
         ];
     }
 
@@ -111,11 +112,9 @@ class EntrepreneurReportService
     /**
      * @return array{0: array<string, int>, 1: int}
      */
-    private function ordersByStatus(Emprendimiento $business, ReportFilters $filters): array
+    private function ordersByStatus(Emprendimiento $business, ReportFilters $filters, ?OrderStatus $status): array
     {
-        $rawCounts = DB::table('pedidos')
-            ->where('emprendimiento_id', $business->id)
-            ->whereBetween('created_at', [$filters->desde, $filters->hasta])
+        $rawCounts = $this->ordersQuery($business, $filters, $status)
             ->selectRaw('estado_actual, COUNT(*) as total')
             ->groupBy('estado_actual')
             ->pluck('total', 'estado_actual');
@@ -135,12 +134,10 @@ class EntrepreneurReportService
     /**
      * @return array{total: string, pedidos: int}
      */
-    private function deliveredSales(Emprendimiento $business, ReportFilters $filters): array
+    private function deliveredSales(Emprendimiento $business, ReportFilters $filters, ?OrderStatus $status): array
     {
-        $row = DB::table('pedidos')
-            ->where('emprendimiento_id', $business->id)
+        $row = $this->ordersQuery($business, $filters, $status)
             ->where('estado_actual', OrderStatus::ENTREGADO->value)
-            ->whereBetween('created_at', [$filters->desde, $filters->hasta])
             ->selectRaw('COALESCE(SUM(subtotal), 0.00) as total, COUNT(*) as pedidos')
             ->first();
 
@@ -153,15 +150,17 @@ class EntrepreneurReportService
     /**
      * @return array{generadas: string, pagadas: string, pendientes: string, cantidad: int}
      */
-    private function commissions(Emprendimiento $business, ReportFilters $filters): array
+    private function commissions(Emprendimiento $business, ReportFilters $filters, ?OrderStatus $status): array
     {
         $row = DB::table('comisiones')
-            ->where('emprendimiento_id', $business->id)
-            ->whereBetween('created_at', [$filters->desde, $filters->hasta])
+            ->join('pedidos', 'pedidos.id', '=', 'comisiones.pedido_id')
+            ->where('comisiones.emprendimiento_id', $business->id)
+            ->whereBetween('comisiones.created_at', [$filters->desde, $filters->hasta])
+            ->when($status, fn (Builder $query) => $query->where('pedidos.estado_actual', $status->value))
             ->selectRaw(
-                'COALESCE(SUM(total_comision), 0.00) as generadas, '
-                .'COALESCE(SUM(CASE WHEN estado = ? THEN total_comision ELSE 0.00 END), 0.00) as pagadas, '
-                .'COALESCE(SUM(CASE WHEN estado = ? THEN total_comision ELSE 0.00 END), 0.00) as pendientes, '
+                'COALESCE(SUM(comisiones.total_comision), 0.00) as generadas, '
+                .'COALESCE(SUM(CASE WHEN comisiones.estado = ? THEN comisiones.total_comision ELSE 0.00 END), 0.00) as pagadas, '
+                .'COALESCE(SUM(CASE WHEN comisiones.estado = ? THEN comisiones.total_comision ELSE 0.00 END), 0.00) as pendientes, '
                 .'COUNT(*) as cantidad',
                 [CommissionStatus::PAGADA->value, CommissionStatus::PENDIENTE->value],
             )
@@ -178,15 +177,13 @@ class EntrepreneurReportService
     /**
      * @return list<array{periodo: string, ventas: string, pedidos: int}>
      */
-    private function salesByPeriod(Emprendimiento $business, ReportFilters $filters): array
+    private function salesByPeriod(Emprendimiento $business, ReportFilters $filters, ?OrderStatus $status): array
     {
         $byDay = $filters->groupsByDay();
         $sqlFormat = $byDay ? '%Y-%m-%d' : '%Y-%m';
 
-        $rows = DB::table('pedidos')
-            ->where('emprendimiento_id', $business->id)
+        $rows = $this->ordersQuery($business, $filters, $status)
             ->where('estado_actual', OrderStatus::ENTREGADO->value)
-            ->whereBetween('created_at', [$filters->desde, $filters->hasta])
             ->selectRaw(
                 "DATE_FORMAT(created_at, '{$sqlFormat}') as periodo, "
                 .'COALESCE(SUM(subtotal), 0.00) as ventas, '
@@ -241,7 +238,7 @@ class EntrepreneurReportService
     /**
      * @return list<array{producto_id: int, nombre: string, unidades: int, ingresos: string}>
      */
-    private function topProducts(Emprendimiento $business, ReportFilters $filters, int $limit): array
+    private function topProducts(Emprendimiento $business, ReportFilters $filters, int $limit, ?OrderStatus $status): array
     {
         return DB::table('detalle_pedidos')
             ->join('pedidos', 'pedidos.id', '=', 'detalle_pedidos.pedido_id')
@@ -249,6 +246,7 @@ class EntrepreneurReportService
             ->where('pedidos.emprendimiento_id', $business->id)
             ->where('productos.emprendimiento_id', $business->id)
             ->where('pedidos.estado_actual', OrderStatus::ENTREGADO->value)
+            ->when($status, fn (Builder $query) => $query->where('pedidos.estado_actual', $status->value))
             ->whereBetween('pedidos.created_at', [$filters->desde, $filters->hasta])
             ->groupBy('detalle_pedidos.producto_id', 'productos.nombre')
             ->selectRaw(
@@ -270,6 +268,14 @@ class EntrepreneurReportService
                 'ingresos' => $this->decimalString($row->ingresos),
             ])
             ->all();
+    }
+
+    private function ordersQuery(Emprendimiento $business, ReportFilters $filters, ?OrderStatus $status): Builder
+    {
+        return DB::table('pedidos')
+            ->where('emprendimiento_id', $business->id)
+            ->whereBetween('created_at', [$filters->desde, $filters->hasta])
+            ->when($status, fn (Builder $query) => $query->where('estado_actual', $status->value));
     }
 
     private function decimalString(string|int|float $value): string

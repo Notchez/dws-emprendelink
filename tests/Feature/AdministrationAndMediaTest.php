@@ -81,7 +81,10 @@ class AdministrationAndMediaTest extends TestCase
     public function test_admin_can_deactivate_and_reactivate_a_plan_without_changing_existing_subscriptions(): void
     {
         $admin = $this->user(UserRole::ADMIN);
-        $plan = Plan::factory()->create(['estado' => true]);
+        $plan = Plan::factory()->create([
+            'nombre' => 'Plan Verificación Reactivable',
+            'estado' => true,
+        ]);
         $business = $this->business(plan: $plan);
 
         $this->actingAs($admin)->patch(route('admin.planes.status', $plan), ['estado' => false])->assertRedirect();

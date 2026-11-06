@@ -45,13 +45,22 @@ No se registrarán defectos inventados.
 
 ## 4. Registro de defectos
 
-| ID  | Historia Trello | Módulo | Descripción                      | Prioridad | Responsable | Estado | PR/commit | Evidencia |
-| --- | --------------- | ------ | -------------------------------- | --------- | ----------- | ------ | --------- | --------- |
-| —   | —               | —      | Sin defectos registrados todavía | —         | —           | —      | —         | —         |
+| ID | Historia Fase 3 | Módulo | Descripción confirmada | Prioridad | Responsable | Estado | Evidencia real |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| DEF-001 | DWS-F3-05 | Reportes administrativos | No existían indicadores, filtros, gráficos ni exportaciones globales para ADMIN. | P1 | Cierre de integración | Resuelto | `AdminReportTest`: 6 pruebas, 58 aserciones aprobadas. |
+| DEF-002 | DWS-F3-03 | Categorías | Los modales estaban insertados directamente dentro de `tbody`, produciendo HTML inválido, y usaban iconos Font Awesome no cargados. | P1 | Cierre de integración | Resuelto | Modales fuera de la tabla en `resources/views/entrepreneur/categories.blade.php`; Bootstrap Icons. |
+| DEF-003 | DWS-F3-03 | Negocio | El formulario invocaba `formatPhone()` inexistente y enviaba `codigo_area`, campo que el backend no acepta. | P1 | Cierre de integración | Resuelto | `resources/views/entrepreneur/business.blade.php`; contrato alineado con `UpdateBusinessRequest`. |
+| DEF-004 | DWS-F3-03 | Formularios | `maxlength=255` contradecía la validación Laravel de 2000 caracteres para descripciones de negocio y producto. | P1 | Cierre de integración | Resuelto | Límites de interfaz alineados a 2000 y contador compartido en `resources/js/adminlte.js`. |
+| DEF-005 | DWS-F3-03 | Categorías | Desvincular productos y eliminar la categoría se ejecutaba sin transacción. | P1 | Cierre de integración | Resuelto | `CategoryManagementService::delete()` usa transacción y bloqueo; prueba de catálogo aprobada. |
+| DEF-006 | DWS-F3-03/04 | Productos e historial | El CRUD no exponía eliminación y una eliminación lógica podía ocultar el producto al mostrar pedidos históricos. | P1 | Cierre de integración | Resuelto | Ruta DELETE, Policy, servicio con SoftDeletes y relación `DetallePedido::producto()->withTrashed()`; prueba aprobada. |
+| DEF-007 | DWS-F3-06 | Reportes del emprendedor | Faltaba el filtro por estado requerido por el plan de Fase 3. | P1 | Cierre de integración | Resuelto | `EntrepreneurReportStatusFilterTest`: 3 pruebas aprobadas; suite existente de reportes: 42 pruebas, 414 aserciones. |
+| DEF-008 | DWS-F3-08 | Dependencias PHP | El lockfile contenía siete avisos sobre cuatro componentes Symfony. | P0 | Cierre de integración | Resuelto | Parches Symfony 7.4.23/8.1.11; `composer audit` posterior sin avisos. |
+| DEF-009 | DWS-F3-08 | Dependencias frontend | npm reportaba 5 vulnerabilidades: 3 altas y 2 críticas. | P0 | Cierre de integración | Resuelto | Vite 6.4.5, concurrently 9.2.5 y overrides transitivos; `npm audit` posterior: 0 vulnerabilidades. |
+| DEF-010 | DWS-F3-02/04 | Documentación | AGENTS y LLM Guide contradecían la implementación vigente al permitir checkout sin cuenta. | P1 | Cierre de integración | Resuelto | Documentación alineada: catálogo público y carrito/checkout solo para CLIENTE autenticado. |
 
-Los identificadores utilizarán el formato:
+Los identificadores utilizan el formato:
 
-DEF-001, DEF-002, DEF-003, etc.
+DEF-001, DEF-002, DEF-003, etc. Los IDs DWS-F3 son referencias provisionales de `FASE_3_PLAN.md`; no se afirma una vinculación a Trello.
 
 ## 5. Registro de un defecto
 

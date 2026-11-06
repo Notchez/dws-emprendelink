@@ -9,6 +9,7 @@
                 ['admin.emprendimientos.*','admin.emprendimientos.index','shop','Emprendimientos'],
                 ['admin.planes.*','admin.planes.index','tags','Planes'],
                 ['admin.pedidos.*','admin.pedidos.index','receipt','Pedidos'],
+                ['admin.reports.*','admin.reports.index','bar-chart-line','Reportes'],
                 ['admin.comisiones.*','admin.comisiones.index','calendar-check','Cargos mensuales'],
             ] as [$match,$route,$icon,$label])
                 <li class="nav-item"><a href="{{ route($route) }}" @class(['nav-link','active'=>request()->routeIs($match)])><i class="nav-icon bi bi-{{ $icon }}"></i><p>{{ $label }}</p></a></li>

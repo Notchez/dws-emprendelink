@@ -165,7 +165,38 @@ body { min-height: 100vh; }
 .status-badge { color: #1e40af; background: #dbeafe; border: 1px solid #bfdbfe; }
 .price { color: var(--el-primary); font-size: 1.35rem; font-weight: 750; }
 .metric-card .metric-icon { width: 2.75rem; height: 2.75rem; display: grid; place-items: center; border-radius: .75rem; background: var(--el-primary-light); color: var(--el-primary); }
+.admin-report-grid > [class*='col-'] { align-self: flex-start; }
+.admin-report-chart { position: relative; width: 100%; height: 280px; min-height: 0; overflow: hidden; }
+.admin-report-chart--plans { height: 300px; }
+.admin-report-chart--sales { height: 300px; }
+.admin-report-chart canvas { width: 100% !important; height: 100% !important; }
+.entrepreneur-products-grid > [class*='col-'] { align-self: stretch; }
+.entrepreneur-product-card .card-body { padding: 1rem; }
+.entrepreneur-product-image,
+.entrepreneur-product-placeholder { height: clamp(180px, 16vw, 220px); aspect-ratio: auto; }
+.entrepreneur-product-actions .btn { padding: .45rem .65rem; }
+.entrepreneur-report-metrics .card-body { padding: 1rem; }
+.entrepreneur-report-grid > [class*='col-'] { align-self: flex-start; }
+.entrepreneur-report-grid .card-header { padding: .85rem 1rem; }
+.entrepreneur-report-grid .card-body { padding: 1rem; }
+.entrepreneur-report-grid .table > :not(caption) > * > * { padding: .65rem .75rem; }
+.entrepreneur-report-chart { position: relative; width: 100%; min-height: 0; overflow: hidden; }
+.entrepreneur-report-chart--status { height: 260px; }
+.entrepreneur-report-chart--products { height: 280px; }
+.entrepreneur-report-chart--sales { height: 280px; }
+.entrepreneur-report-chart canvas { width: 100% !important; height: 100% !important; }
 .form-label { font-weight: 600; }
 .auth-shell { min-height: calc(100vh - 70px); display: grid; place-items: center; }
 .auth-card { width: min(100%, 30rem); }
-@media (max-width: 767.98px) { .storefront-header .nav-link { font-size: .8rem; } .app-content-header h1 { font-size: 1.5rem; } }
+@media (max-width: 767.98px) {
+    .storefront-header .nav-link { font-size: .8rem; }
+    .app-content-header h1 { font-size: 1.5rem; }
+    .admin-report-chart,
+    .admin-report-chart--plans { height: 240px; }
+    .admin-report-chart--sales { height: 260px; }
+    .entrepreneur-product-image,
+    .entrepreneur-product-placeholder { height: 190px; }
+    .entrepreneur-report-chart--status,
+    .entrepreneur-report-chart--sales { height: 230px; }
+    .entrepreneur-report-chart--products { height: 260px; }
+}

@@ -15,14 +15,14 @@
 @section('content')
     @include('components.flash')
 
-    <div class="row g-4">
+    <div class="row g-3 entrepreneur-products-grid">
         @forelse($productos as $producto)
-            <div class="col-12 col-sm-6 col-xl-4">
-                <article class="card product-card h-100">
+            <div class="col-12 col-sm-6 col-lg-4 col-xxl-3">
+                <article class="card product-card entrepreneur-product-card h-100">
                     @if($producto->imagen_url)
-                        <img class="admin-product-image" src="{{ asset('storage/'.$producto->imagen_url) }}" alt="{{ $producto->nombre }}">
+                        <img class="admin-product-image entrepreneur-product-image" src="{{ asset('storage/'.$producto->imagen_url) }}" alt="{{ $producto->nombre }}">
                     @else
-                        <div class="product-placeholder"><i class="bi bi-image" aria-hidden="true"></i></div>
+                        <div class="product-placeholder entrepreneur-product-placeholder"><i class="bi bi-image" aria-hidden="true"></i></div>
                     @endif
 
                     <div class="card-body d-flex flex-column">
@@ -32,10 +32,10 @@
                                 {{ $producto->estado ? 'Activo' : 'Inactivo' }}
                             </span>
                         </div>
-                        <h2 class="h5 fw-bold">{{ $producto->nombre }}</h2>
-                        <p class="price mb-4">${{ number_format($producto->precio, 2) }}</p>
+                        <h2 class="h5 fw-bold mb-1">{{ $producto->nombre }}</h2>
+                        <p class="price mb-3">${{ number_format($producto->precio, 2) }}</p>
 
-                        <div class="d-flex flex-wrap gap-2 mt-auto">
+                        <div class="d-flex flex-wrap gap-2 mt-auto entrepreneur-product-actions">
                             <a class="btn btn-outline-primary flex-grow-1" href="{{ route('entrepreneur.products.edit', $producto) }}">
                                 <i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar
                             </a>
@@ -47,6 +47,9 @@
                                     {{ $producto->estado ? 'Desactivar' : 'Activar' }}
                                 </button>
                             </form>
+                            <button class="btn btn-outline-danger" type="button" data-bs-toggle="modal" data-bs-target="#deleteProduct-{{ $producto->id }}" aria-label="Eliminar {{ $producto->nombre }}">
+                                <i class="bi bi-trash" aria-hidden="true"></i>
+                            </button>
                         </div>
                     </div>
                 </article>
@@ -60,6 +63,19 @@
             </div>
         @endforelse
     </div>
+
+    @foreach($productos as $producto)
+        <div class="modal fade" id="deleteProduct-{{ $producto->id }}" tabindex="-1" aria-labelledby="deleteProductLabel-{{ $producto->id }}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+                <div class="modal-header"><h2 class="modal-title fs-5" id="deleteProductLabel-{{ $producto->id }}">Eliminar producto</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+                <div class="modal-body">¿Deseas eliminar <strong>{{ $producto->nombre }}</strong>? Se conservará en el historial de pedidos.</div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form method="POST" action="{{ route('entrepreneur.products.destroy', $producto) }}">@csrf @method('DELETE')<button class="btn btn-danger" type="submit">Eliminar</button></form>
+                </div>
+            </div></div>
+        </div>
+    @endforeach
 
     <div class="mt-4">{{ $productos->links() }}</div>
 @endsection

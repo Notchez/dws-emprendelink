@@ -72,12 +72,12 @@
                               id="descripcion" 
                               name="descripcion" 
                               rows="4" 
-                              maxlength="255" 
-                              oninput="updateProductCharCount(this)"
+                              maxlength="2000"
+                              data-character-counter="#product-char-count"
                               style="resize: none;">{{ old('descripcion', $producto->descripcion) }}</textarea>
                     <div class="d-flex justify-content-between mt-1">
-                        <small class="text-muted">Breve descripción del producto (máximo 255 caracteres).</small>
-                        <small class="text-muted" id="product-char-count">0 / 255</small>
+                        <small class="text-muted">Descripción del producto (máximo 2000 caracteres).</small>
+                        <small class="text-muted" id="product-char-count" aria-live="polite">0 / 2000</small>
                     </div>
                 </div>
 
@@ -96,23 +96,4 @@
             <a class="btn btn-outline-secondary" href="{{ route('entrepreneur.products.index') }}">Cancelar</a>
         </div>
     </form>
-
-
-    <script>
-    function updateProductCharCount(textarea) {
-        const maxLength = textarea.getAttribute('maxlength');
-        const currentLength = textarea.value.length;
-        const counter = document.getElementById('product-char-count');
-        if (counter) {
-            counter.textContent = `${currentLength} / ${maxLength}`;
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const desc = document.getElementById('descripcion');
-        if (desc) {
-            updateProductCharCount(desc);
-        }
-    });
-    </script>
 @endsection

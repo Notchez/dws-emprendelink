@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Services\Emprendedor;
+
 use App\Exceptions\ProductLimitReachedException;
 use App\Models\Emprendimiento;
 use App\Models\Producto;
@@ -92,10 +94,19 @@ class ProductCatalogService
         return $this->update($product, ['estado' => $active]);
     }
 
+    public function delete(Producto $product): void
+    {
+        DB::transaction(function () use ($product): void {
+            $locked = Producto::query()->lockForUpdate()->findOrFail($product->id);
+            $locked->update(['estado' => false]);
+            $locked->delete();
+        });
+    }
+
     private function ensureCapacity(Emprendimiento $business): void
     {
-        $limit=$business->suscripcionActiva()->with('plan')->first()?->plan?->limite_productos;
-        if ($limit === null || $business->productos()->where('estado',true)->count() >= $limit) {
+        $limit = $business->suscripcionActiva()->with('plan')->first()?->plan?->limite_productos;
+        if ($limit === null || $business->productos()->where('estado', true)->count() >= $limit) {
             throw new ProductLimitReachedException('Has alcanzado el límite de productos activos de tu plan.');
         }
     }
