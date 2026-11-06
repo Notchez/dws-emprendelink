@@ -1,21 +1,29 @@
-# Matriz de pruebas
+# Inventario de pruebas automatizadas
 
-La suite usa MySQL en `dws_emprendelink_test` por defecto. PHPUnit respeta una variable externa `DB_DATABASE`, por lo que CI utiliza `emprendelink_testing`; ambos nombres pasan la protección de la clase base y la base normal es rechazada.
+La suite utiliza MySQL. En local opera sobre `dws_emprendelink_test`; GitHub Actions
+usa `emprendelink_testing`. La clase base rechaza cualquier nombre que no termine en
+`_test` o `_testing`.
 
 | Archivo | Cobertura real |
 | --- | --- |
-| `tests/Unit/BusinessRulesTest.php` | Cálculo y redondeo de comisión; matriz aprobada de estados |
-| `tests/Feature/AuthenticationAuthorizationTest.php` | Registro de cliente, login válido/inválido, redirección por rol, cuenta suspendida, logout, middleware y acceso cruzado a pedidos |
-| `tests/Feature/CatalogProfileOwnershipTest.php` | Visibilidad del catálogo, filtro por negocio, protección de perfil, CRUD/ownership de categorías y negocio, MIME inválido y acceso al carrito |
-| `tests/Feature/CartCheckoutTest.php` | Operaciones del carrito, disponibilidad, varios negocios, snapshots del usuario, precio/subtotal servidor, detalles, dirección, idempotencia y rollback |
-| `tests/Feature/OrderCommissionTest.php` | Flujo e historial, snapshot obligatorio, comisión idempotente, suma mensual exacta, separación por negocio/período, bloqueo del mes actual, pago atómico completo, terminalidad, cambio de año, rutas eliminadas y permisos |
-| `tests/Feature/AdministrationAndMediaTest.php` | Separación cuenta/negocio, alta de emprendedor, estado y cambio de plan, slugs, límites, suspensión, consultas admin y reemplazo de archivos |
-| `tests/Feature/DatabaseIntegrityTest.php` | Claves foráneas, negocio único por usuario, comisión única y FK de categoría |
+| `tests/Unit/BusinessRulesTest.php` | Cálculo de comisión y transiciones permitidas del pedido |
+| `tests/Feature/AuthenticationAuthorizationTest.php` | Registro, login, logout, roles, suspensión, middleware y acceso a pedidos |
+| `tests/Feature/CatalogProfileOwnershipTest.php` | Catálogo, perfil, categorías, productos, eliminación lógica, HTML y ownership |
+| `tests/Feature/CartCheckoutTest.php` | Carrito, disponibilidad, checkout multi-negocio, snapshots, idempotencia y rollback |
+| `tests/Feature/OrderCommissionTest.php` | Historial, comisiones, estados de cuenta mensuales, pagos y permisos |
+| `tests/Feature/AdministrationAndMediaTest.php` | Usuarios, emprendimientos, planes, límites, slugs e imágenes |
+| `tests/Feature/DatabaseIntegrityTest.php` | Claves foráneas y restricciones de unicidad |
+| `tests/Feature/EntrepreneurReportTest.php` | Consultas MySQL, filtros temporales, gráficos, aislamiento, PDF y XLSX |
+| `tests/Feature/EntrepreneurReportStatusFilterTest.php` | Filtro de estado y validación en pantalla y exportaciones |
+| `tests/Feature/AdminReportTest.php` | Reportes globales, filtros, planes, autorización, gráficos y exportaciones |
+| `tests/Feature/DemoShowcaseSeederTest.php` | Idempotencia, períodos, relaciones, totales, comisiones y SVG del showcase |
+| `tests/Concerns/CreatesDomainData.php` | Fábrica de datos de dominio compartida por las pruebas funcionales |
+| `tests/TestCase.php` | Protección obligatoria de la base MySQL de testing |
 
-Comando:
+La ejecución publicada en `v1.0.0-rc.1` contiene 109 pruebas y 910 aserciones. Las
+pruebas de archivos usan `Storage::fake('public')` y no escriben en el almacenamiento
+real.
 
-```bash
+```powershell
 php artisan test
 ```
-
-Si se usa `RefreshDatabase`, nunca se debe cambiar `DB_DATABASE` de PHPUnit a la base normal. Las pruebas de archivos emplean `Storage::fake('public')` y no escriben en el almacenamiento real.

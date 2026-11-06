@@ -1,327 +1,119 @@
-﻿# EmprendeLink — Fase 3: Integración Full Stack y Release Candidate
+# Fase 3 — Implementación y resultados
+
+## Propósito
 
-**Materia:** DWS901
-**Proyecto:** EmprendeLink
-**Entrega objetivo:** 8 de noviembre de 2026
-**Ponderación:** 25%
-**Repositorio:** https://github.com/Notchez/dws-emprendelink
-**Rama base:** develop
-**Product Backlog:** Trello — EmprendeLink Scrum Backlog
+La Fase 3 integró EmprendeLink como una aplicación Full Stack sobre Laravel 12,
+MySQL 8, Blade, AdminLTE 4 y Vite. El incremento consolidó los módulos existentes,
+incorporó reportes y exportaciones, corrigió defectos de integración y produjo la
+Release Candidate `v1.0.0-rc.1`.
 
-## 1. Objetivo
+La implementación fue integrada mediante los Pull Requests #21 y #22. La versión
+publicada corresponde al commit `3ed062322a023e246546ed9a5b6e733fd3954042`:
 
-Completar la integración Full Stack de EmprendeLink utilizando Laravel 12, Blade, AdminLTE y MySQL.
+https://github.com/Notchez/dws-emprendelink/releases/tag/v1.0.0-rc.1
 
-La Fase 3 debe entregar una aplicación funcional, con autenticación, roles, operaciones CRUD, archivos, validaciones, reportes, gráficos, exportaciones y pruebas de integración.
+## Alcance implementado
 
-El objetivo es alcanzar el nivel Estratégico de la rúbrica: 9.0–10.0.
+### Autenticación y seguridad
 
-## 2. Estado actual
+- Registro público exclusivo para clientes.
+- Inicio y cierre de sesión con regeneración e invalidación segura de sesión.
+- Roles `admin`, `emprendedor` y `cliente` mediante Enum.
+- Middleware para autenticación, cuenta activa y rol.
+- Policies y consultas restringidas por propietario.
+- Bloqueo efectivo de cuentas suspendidas.
 
-La Fase 2 ya incorporó:
+### Emprendimientos y catálogo
 
-- Autenticación y autorización por roles.
-- Administración de usuarios, planes y emprendimientos.
-- Gestión de categorías y productos.
-- Catálogo público.
-- Carrito y checkout.
-- Pedidos e historial de estados.
-- Ventas y comisiones.
-- Persistencia con MySQL.
-- Validaciones y reglas de negocio.
-- Pruebas automatizadas y GitHub Actions.
+- Administración de emprendimientos, planes y suscripciones.
+- Perfil del negocio con logo almacenado mediante Laravel Storage.
+- CRUD de categorías y productos con validaciones de servidor.
+- Límite de productos activos según el plan vigente.
+- Eliminación lógica de productos y conservación del historial de pedidos.
+- Catálogo público con búsqueda, filtros y visibilidad restringida a entidades activas.
 
-Estos módulos deben aprovecharse y completarse cuando sea necesario.
+### Carrito, pedidos y comisiones
 
-No se reconstruirán funcionalidades existentes sin una justificación técnica.
+- Carrito de sesión exclusivo para clientes autenticados.
+- Checkout transaccional que separa un pedido por emprendimiento.
+- Totales, precios y snapshots calculados en servidor.
+- Tokens de idempotencia para evitar pedidos duplicados.
+- Flujo controlado de estados con historial de transiciones.
+- Comisión única al entregar un pedido y estados de cuenta mensuales por negocio.
+- Pago administrativo atómico de períodos mensuales cerrados.
 
-La rama feature/emprendimientos-productos permanecerá separada y no será integrada automáticamente.
+### Reportes
 
-## 3. Product Backlog
+El emprendedor consulta exclusivamente la información de su negocio:
 
-Herramienta oficial: Trello.
+- ventas de pedidos entregados;
+- pedidos por estado;
+- productos más vendidos;
+- evolución de ventas;
+- comisiones históricas;
+- filtros por fechas y estado;
+- exportaciones PDF y XLSX.
 
-Tablero: EmprendeLink Scrum Backlog.
+El administrador dispone de reportes globales con:
 
-El enlace normal de visualización del tablero está pendiente de confirmar. No publicar enlaces privados de invitación.
+- ventas entregadas y evolución temporal;
+- pedidos agrupados por estado;
+- comisiones históricas;
+- emprendimientos activos;
+- distribución de planes vigentes;
+- filtros por fechas, emprendimiento y estado;
+- gráficos y exportaciones PDF y XLSX.
 
-### Responsable adicional
+Las pantallas y exportaciones reutilizan los mismos servicios de reporte para evitar
+divergencias en filtros, totales y reglas de cálculo.
 
-El integrante que creó originalmente el tablero será responsable de mantenerlo actualizado.
+## Reglas de cálculo
 
-Nombre: pendiente de confirmar.
+- Una venta entregada es el subtotal de un pedido creado dentro del período filtrado
+  cuyo estado actual es `Entregado`.
+- Los productos más vendidos se calculan con las cantidades de detalles pertenecientes
+  a pedidos entregados.
+- Las comisiones utilizan el monto base y porcentaje históricos almacenados en cada
+  pedido; nunca se recalculan con el plan actual.
+- La distribución de planes considera suscripciones activas.
+- Los filtros de fecha incluyen los límites completos de cada día.
+- Los reportes del emprendedor determinan el negocio desde el usuario autenticado y no
+  aceptan un `emprendimiento_id` como fuente de autorización.
 
-Responsabilidades:
+## Arquitectura aplicada
 
-- Actualizar historias y tareas.
-- Registrar prioridades.
-- Asignar responsables.
-- Mantener estados de las historias.
-- Evitar tarjetas duplicadas.
-- Vincular funcionalidades con commits o PR.
-- Registrar evidencias.
-- Comprobar que el tablero represente el estado real del proyecto.
+Las rutas declaran endpoints y middleware; los controladores coordinan solicitudes;
+los Form Requests validan entradas; las Policies comprueban permisos; los servicios
+concentran reglas, cálculos y transacciones; Eloquent persiste en MySQL; Blade presenta
+los resultados. Los estilos y JavaScript compartidos se compilan con Vite.
 
-Esta responsabilidad será adicional al módulo técnico asignado.
+Las exportaciones usan `barryvdh/laravel-dompdf` y `phpoffice/phpspreadsheet`. Las
+cadenas controladas por usuarios se escriben como texto en XLSX para impedir inyección
+de fórmulas.
 
-## 4. Historias de Fase 3
+## Datos de demostración
 
-Los siguientes identificadores son provisionales.
+`DemoShowcaseSeeder` prepara un escenario local reproducible sin formar parte de
+`DatabaseSeeder`. Genera cuatro emprendimientos del escenario, 18 productos, 20
+pedidos históricos y 22 SVG originales. Es idempotente y solo funciona en los entornos
+`local` y `testing`.
 
-Se deben vincular con historias existentes de Trello cuando corresponda, evitando duplicarlas.
+## Validación y publicación
 
-| ID        | Área                        | Resultado esperado                             |
-| --------- | --------------------------- | ---------------------------------------------- |
-| DWS-F3-01 | Integración e interfaz      | Flujos completos y diseño responsive           |
-| DWS-F3-02 | Seguridad y validaciones    | Roles, permisos y errores controlados          |
-| DWS-F3-03 | Catálogo y productos        | CRUD, imágenes, filtros y límites de plan      |
-| DWS-F3-04 | Pedidos y comisiones        | Checkout, pedidos, estados y cálculos          |
-| DWS-F3-05 | Reportes administrativos    | Indicadores, gráficos y exportaciones          |
-| DWS-F3-06 | Reportes del emprendedor    | Ventas, productos, comisiones y gráficos       |
-| DWS-F3-07 | Administración              | Usuarios, negocios, planes y estados de cuenta |
-| DWS-F3-08 | Calidad y Release Candidate | Pruebas, defectos, evidencia y versión final   |
+La suite final contiene 109 pruebas y 910 aserciones. Cubre autenticación, permisos,
+catálogo, archivos, checkout, pedidos, comisiones, administración, reportes,
+exportaciones, integridad e idempotencia del showcase.
 
-Los responsables específicos se definirán durante la distribución de trabajo.
+El workflow “Pruebas de Laravel” #50 se ejecutó sobre el commit de la RC y terminó con
+resultado satisfactorio:
 
-## 5. Criterios de aceptación
+https://github.com/Notchez/dws-emprendelink/actions/runs/42273453688
 
-Cada historia deberá indicar qué condiciones debe cumplir para considerarse terminada.
+La evidencia automatizada no se presenta como sustituto de evaluaciones visuales o
+académicas que no estén registradas en el repositorio.
 
-Como mínimo:
+## Exclusiones
 
-- La funcionalidad realiza la operación esperada.
-- Utiliza datos reales de MySQL cuando corresponde.
-- Respeta los roles y permisos.
-- Valida los datos ingresados.
-- Muestra errores comprensibles.
-- Funciona desde la interfaz.
-- Cuenta con pruebas y evidencia.
-- No presenta defectos críticos conocidos.
-
-### Ejemplo: reporte de ventas
-
-Una historia de reporte de ventas estará terminada cuando:
-
-1. El usuario autorizado pueda abrirla.
-2. Los datos provengan de MySQL.
-3. Los filtros funcionen correctamente.
-4. Los totales sean correctos.
-5. Los usuarios sin permiso no puedan acceder.
-6. Los resultados vacíos se manejen adecuadamente.
-7. Las exportaciones coincidan con los resultados mostrados.
-
-## 6. Reportes del administrador
-
-El administrador podrá consultar información general de la plataforma.
-
-### Indicadores
-
-- Pedidos por estado.
-- Ventas de pedidos entregados.
-- Comisiones generadas.
-- Emprendimientos activos.
-- Distribución de planes.
-- Evolución de ventas.
-
-### Gráficos
-
-- Barras: evolución de ventas.
-- Circular: distribución de pedidos por estado.
-- Tablas: comisiones, emprendimientos y planes.
-
-### Filtros
-
-- Fecha inicial.
-- Fecha final.
-- Emprendimiento, cuando corresponda.
-- Estado del pedido, cuando corresponda.
-
-## 7. Reportes del emprendedor
-
-Cada emprendedor podrá consultar únicamente información de su negocio.
-
-### Indicadores
-
-- Ventas de pedidos entregados.
-- Pedidos por estado.
-- Productos más vendidos.
-- Comisiones generadas.
-- Evolución de ventas.
-
-### Gráficos
-
-- Barras: ventas por período.
-- Ranking: productos más vendidos.
-- Circular: pedidos por estado.
-
-### Filtros
-
-- Fecha inicial.
-- Fecha final.
-- Estado del pedido, cuando corresponda.
-
-El servidor deberá determinar qué emprendimiento pertenece al usuario autenticado.
-
-No debe permitirse consultar datos ajenos modificando parámetros de la URL.
-
-## 8. Reglas de cálculo
-
-Los reportes deberán utilizar definiciones consistentes.
-
-### Pedidos
-
-Contar los registros de pedidos y agruparlos por su estado actual.
-
-Los filtros temporales utilizarán inicialmente la fecha de creación del pedido.
-
-### Ventas entregadas
-
-Sumar el subtotal de los pedidos cuyo estado actual sea Entregado.
-
-Si se filtra por fechas de creación, el indicador representa pedidos creados en ese período que actualmente están entregados.
-
-No debe confundirse con ventas efectivamente entregadas durante el período, que requerirían utilizar fechas del historial de estados.
-
-### Comisiones
-
-Sumar los valores históricos registrados en las comisiones.
-
-Distinguir entre comisiones generadas y comisiones pagadas.
-
-No recalcular pedidos históricos utilizando el porcentaje de un plan nuevo.
-
-### Productos más vendidos
-
-Sumar las cantidades de los detalles de pedidos entregados, aplicando los filtros del reporte.
-
-### Distribución de planes
-
-Considerar únicamente las suscripciones o planes vigentes correspondientes.
-
-No contar suscripciones antiguas como si fueran actuales.
-
-### Validación de períodos
-
-- La fecha inicial no puede superar la final.
-- El período debe aplicarse de forma consistente.
-- Los filtros no deben permitir consultar datos de otro emprendimiento.
-
-## 9. Exportaciones
-
-Se propone generar reportes en:
-
-- PDF.
-- Excel (XLSX).
-
-Las exportaciones deberán:
-
-- Utilizar los mismos filtros que la pantalla.
-- Mostrar los mismos resultados y totales.
-- Respetar los permisos del usuario.
-- Incluir títulos y encabezados claros.
-- Manejar correctamente períodos sin resultados.
-
-Antes de instalar dependencias, verificar compatibilidad con Laravel y PHP.
-
-## 10. Pruebas de integración
-
-Se utilizará:
-
-docs/FASE_3_MATRIZ_PRUEBAS.md
-
-Cada funcionalidad deberá comprobar:
-
-- Caso positivo.
-- Caso negativo.
-- Validaciones.
-- Permisos.
-- Persistencia correcta.
-- Mensajes de error.
-- Comportamiento responsive, cuando corresponda.
-
-Los resultados deberán registrarse con evidencia real.
-
-## 11. Gestión de defectos
-
-Se utilizará:
-
-docs/FASE_3_DEFECTOS.md
-
-Cada defecto confirmado deberá registrar:
-
-- Identificador.
-- Historia relacionada.
-- Módulo.
-- Descripción.
-- Prioridad.
-- Responsable.
-- Estado.
-- Corrección.
-- Evidencia.
-
-Las observaciones del docente en Fase 2 deberán incorporarse cuando se conozcan.
-
-## 12. Flujo de integración
-
-1. Trabajar desde ramas creadas a partir de develop.
-2. Utilizar Pull Requests hacia develop.
-3. Mantener GitHub Actions funcionando.
-4. No exigir aprobación manual obligatoria de otro integrante en cada PR.
-5. No utilizar push --force en las ramas oficiales.
-6. Mantener Trello actualizado.
-7. Respetar la arquitectura y los contratos existentes.
-8. Registrar los cambios importantes de alcance.
-
-## 13. Definition of Done
-
-Una historia estará terminada cuando:
-
-- [ ] Tiene identificador en Trello.
-- [ ] Tiene responsable.
-- [ ] Tiene criterios de aceptación.
-- [ ] Cumple los criterios definidos.
-- [ ] Utiliza datos reales cuando corresponde.
-- [ ] Aplica permisos y validaciones.
-- [ ] Tiene pruebas positivas y negativas.
-- [ ] Cuenta con evidencia.
-- [ ] Pasa los controles automáticos aplicables.
-- [ ] Está integrada en develop.
-
-## 14. Rúbrica de Fase 3
-
-| Criterio                                   | Peso |
-| ------------------------------------------ | ---: |
-| Integración Full Stack e interfaz          |  20% |
-| Cobertura funcional                        |  25% |
-| Validaciones y manejo de errores           |  20% |
-| Reportes, gráficos y exportaciones         |  20% |
-| Pruebas, Release Candidate y Sprint Review |  15% |
-
-## 15. Entregables
-
-- [ ] Sistema Full Stack integrado.
-- [ ] Autenticación y roles funcionales.
-- [ ] CRUD y módulos del alcance terminados.
-- [ ] Gestión de archivos y validaciones.
-- [ ] Reportes, gráficos y exportaciones.
-- [ ] Pruebas de integración.
-- [ ] Registro de defectos y correcciones.
-- [ ] Release Candidate identificable en GitHub.
-- [ ] PDF con portada, integrantes y evidencias.
-- [ ] Enlace al repositorio.
-- [ ] Enlace al Product Backlog de Trello.
-- [ ] Demostración de los tres roles.
-- [ ] Lista de pendientes para Sprint IV.
-
-## 16. Información pendiente
-
-- Confirmar responsable de Trello.
-- Confirmar enlace normal del tablero.
-- Vincular historias existentes con los IDs propuestos.
-- Registrar observaciones oficiales de Fase 2.
-- Confirmar prototipo aprobado.
-- Formalizar responsabilidades de los seis integrantes.
-
-No se utilizarán cronogramas internos.
-
-El seguimiento se realizará mediante tareas, responsables, estados, criterios de aceptación y evidencias.
+La versión no incorpora pagos en línea, facturación fiscal, chat ni aplicación móvil
+nativa. Las comisiones y estados de cuenta son registros internos de la plataforma y
+no representan documentos fiscales.

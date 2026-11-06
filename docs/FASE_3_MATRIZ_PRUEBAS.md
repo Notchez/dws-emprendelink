@@ -1,168 +1,50 @@
-# EmprendeLink — Matriz de pruebas de integración
+# Fase 3 — Registro de validaciones automatizadas
 
-**Materia:** DWS901
-**Fase:** 3 — Sprint III
-**Proyecto:** EmprendeLink
-**Product Backlog:** Trello
+## Resultado publicado
 
-## 1. Objetivo
+La Release Candidate `v1.0.0-rc.1` fue validada con PHP 8.5, Laravel 12 y MySQL 8.
+La suite final ejecutó 109 pruebas con 910 aserciones.
 
-Verificar que las funcionalidades de EmprendeLink trabajan correctamente desde la interfaz hasta Laravel y MySQL.
+GitHub Actions ejecutó el workflow “Pruebas de Laravel” #50 sobre el commit
+`3ed062322a023e246546ed9a5b6e733fd3954042` y concluyó con `success`:
 
-Se probarán operaciones válidas, operaciones inválidas, restricciones de acceso y reglas de negocio.
+https://github.com/Notchez/dws-emprendelink/actions/runs/42273453688
 
-Esta matriz complementa las pruebas automatizadas existentes del proyecto.
+## Cobertura automatizada por módulo
 
-## 2. Estados
+| Módulo | Evidencia principal | Comportamientos comprobados |
+| --- | --- | --- |
+| Reglas del dominio | `BusinessRulesTest` — 2 pruebas | Redondeo de comisiones y matriz de estados de pedido |
+| Autenticación y autorización | `AuthenticationAuthorizationTest` — 6 pruebas | Registro, login, logout, roles, cuentas suspendidas y acceso a pedidos |
+| Catálogo y propiedad | `CatalogProfileOwnershipTest` — 8 pruebas | Visibilidad, filtros, perfiles, categorías, eliminación lógica, archivos y ownership |
+| Carrito y checkout | `CartCheckoutTest` — 7 pruebas | Sesión, disponibilidad, agrupación por negocio, snapshots, idempotencia y rollback |
+| Pedidos y comisiones | `OrderCommissionTest` — 16 pruebas | Transiciones, historial, comisión única, estados de cuenta, pago mensual y permisos |
+| Administración y archivos | `AdministrationAndMediaTest` — 13 pruebas | Alta de emprendedor, usuarios, planes, límites, slugs, consultas e imágenes |
+| Integridad MySQL | `DatabaseIntegrityTest` — 4 pruebas | Claves foráneas, unicidad de negocio y comisión, y relación de categorías |
+| Reportes del emprendedor | `EntrepreneurReportTest` — 42 pruebas | Totales MySQL, períodos, aislamiento, gráficos, PDF, XLSX y seguridad de exportaciones |
+| Filtro de reportes | `EntrepreneurReportStatusFilterTest` — 3 pruebas | Estado aplicado a pantalla, indicadores y exportaciones; rechazo de valores inválidos |
+| Reportes administrativos | `AdminReportTest` — 7 pruebas | Indicadores globales, filtros, planes, autorización, gráficos y exportaciones |
+| Datos showcase | `DemoShowcaseSeederTest` — 1 prueba | Dos ejecuciones idempotentes, relaciones, períodos, totales, comisiones y 22 SVG |
 
-- Pendiente: prueba no ejecutada.
-- Aprobado: resultado esperado comprobado.
-- Fallido: resultado diferente al esperado.
-- Bloqueado: no puede ejecutarse por un problema o dependencia.
+## Controles de integración continua
 
-Todas las pruebas comienzan pendientes hasta su ejecución real.
+El workflow configura PHP 8.5, Node.js 24, npm 12 y MySQL 8.4. En cada ejecución:
 
-## 3. Matriz de integración
+1. valida `composer.json` y `composer.lock`;
+2. instala y audita dependencias PHP;
+3. instala dependencias frontend con `npm ci`;
+4. compila los recursos con Vite;
+5. prepara una aplicación de testing;
+6. ejecuta migraciones en una base MySQL aislada;
+7. ejecuta la suite PHPUnit.
 
-Los IDs de historias son provisionales hasta vincularlos con Trello.
+La base de CI es `emprendelink_testing`. En local, `phpunit.xml` usa
+`dws_emprendelink_test`. `Tests\TestCase` rechaza bases cuyos nombres no terminen en
+`_test` o `_testing`.
 
-| ID     | Historia     | Módulo            | Prueba positiva                      | Prueba negativa                     | Estado    |
-| ------ | ------------ | ----------------- | ------------------------------------ | ----------------------------------- | --------- |
-| INT-01 | DWS-F3-03    | Catálogo          | Buscar y filtrar productos           | Buscar datos inexistentes           | Pendiente |
-| INT-02 | DWS-F3-02    | Autenticación     | Registro, login y logout             | Credenciales inválidas              | Pendiente |
-| INT-03 | DWS-F3-02    | Perfil            | Actualizar datos válidos             | Datos inválidos                     | Pendiente |
-| INT-04 | DWS-F3-04    | Checkout          | Crear pedido correctamente           | Carrito o datos inválidos           | Pendiente |
-| INT-05 | DWS-F3-04    | Checkout          | Procesar envío normal                | Evitar pedidos duplicados           | Pendiente |
-| INT-06 | DWS-F3-04    | Pedidos           | Consultar pedidos propios            | Consultar pedidos ajenos            | Pendiente |
-| INT-07 | DWS-F3-03    | Categorías        | Crear, editar y eliminar categorías  | Datos inválidos o ajenos            | Aprobado  |
-| INT-08 | DWS-F3-03    | Productos         | Crear y eliminar lógicamente producto | Archivo inválido, recurso ajeno o límite de plan | Aprobado |
-| INT-09 | DWS-F3-04    | Estados           | Cambio permitido de pedido           | Transición no permitida             | Pendiente |
-| INT-10 | DWS-F3-04/06 | Comisiones        | Consultar totales correctos          | Acceso a negocio ajeno              | Pendiente |
-| INT-11 | DWS-F3-07    | Administración    | Gestionar usuarios y planes          | Operación no autorizada             | Pendiente |
-| INT-12 | DWS-F3-07    | Estados de cuenta | Registrar pago permitido             | Duplicado o período abierto         | Pendiente |
-| INT-13 | DWS-F3-02    | Seguridad         | Acceso correcto por rol              | Acceso incorrecto o suspendido      | Pendiente |
-| INT-14 | DWS-F3-05/06 | Reportes          | Indicadores y gráficos correctos     | Filtros inválidos o acceso ajeno    | Aprobado  |
-| INT-15 | DWS-F3-05/06 | Exportaciones     | Descargar PDF y Excel                | Filtros o permisos inválidos        | Aprobado  |
-| INT-16 | DWS-F3-01    | Responsive        | Flujos en escritorio y móvil         | Desbordes o controles inaccesibles  | Pendiente |
-| INT-17 | DWS-F3-08    | Integración       | Pruebas y compilación satisfactorias | Errores de configuración detectados | Pendiente |
+## Alcance de la evidencia
 
-## 4. Pruebas positivas
-
-Una prueba positiva verifica el comportamiento correcto de una operación válida.
-
-Ejemplos:
-
-- Registrar un usuario.
-- Crear un producto.
-- Completar un pedido.
-- Consultar un reporte.
-- Descargar un archivo.
-
-## 5. Pruebas negativas
-
-Una prueba negativa verifica que el sistema rechaza o controla operaciones incorrectas.
-
-Ejemplos:
-
-- Ingresar datos inválidos.
-- Subir archivos no permitidos.
-- Acceder a recursos ajenos.
-- Repetir operaciones que no deben duplicarse.
-- Modificar pedidos con transiciones prohibidas.
-- Consultar reportes sin autorización.
-
-## 6. Evidencias
-
-Cada caso ejecutado debe registrar:
-
-- ID de prueba.
-- Historia relacionada.
-- Responsable.
-- Entorno.
-- Pasos realizados.
-- Resultado esperado.
-- Resultado obtenido.
-- Estado.
-- Evidencia.
-- Defecto asociado, cuando exista.
-
-Se aceptan:
-
-- Capturas de pantalla.
-- Resultados de PHPUnit.
-- GitHub Actions.
-- Logs.
-- Referencias a commits o PR.
-
-No deben declararse pruebas aprobadas sin ejecución.
-
-## 7. Plantilla de ejecución
-
-**ID:**
-
-**Historia Trello:**
-
-**Responsable:**
-
-**Entorno:**
-
-**Precondiciones:**
-
-**Pasos ejecutados:**
-
-**Resultado esperado:**
-
-**Resultado obtenido:**
-
-**Estado:**
-
-**Evidencia:**
-
-**Defecto relacionado:**
-
-## 8. Pruebas específicas de reportes
-
-Verificar:
-
-- Totales comparados con MySQL.
-- Filtros por período.
-- Manejo de fechas inválidas.
-- Información restringida por emprendimiento.
-- Resultados vacíos.
-- Cálculos de comisiones.
-- Gráficos coherentes con las consultas.
-- PDF y Excel con cifras correctas.
-- Restricciones de acceso según rol.
-
-## 9. Ejecuciones automatizadas registradas
-
-Entorno local del 6 de noviembre de 2026: PHP 8.5.12 con GD, Laravel 12 y MySQL aislado `dws_emprendelink_test`.
-
-| Alcance ejecutado | Resultado real |
-| --- | --- |
-| Línea base antes de implementar: `php artisan test` | 96 pruebas aprobadas, 633 aserciones, 9.72 s. |
-| `EntrepreneurReportTest` después de incorporar el filtro | 42 pruebas aprobadas, 414 aserciones, 6.10 s. |
-| `AdminReportTest` | 6 pruebas aprobadas, 58 aserciones, 2.29 s. |
-| `CatalogProfileOwnershipTest` + `EntrepreneurReportStatusFilterTest` | 10 pruebas aprobadas, 58 aserciones, 2.13 s. |
-| Verificación final: `php artisan test` | 109 pruebas aprobadas, 910 aserciones. |
-| Verificación final: `npm run build` | 123 módulos transformados; compilación Vite 6.4.5 aprobada en 747 ms. |
-| `npm audit` después de actualizar dependencias | 0 vulnerabilidades. |
-| `composer audit` después de actualizar dependencias | Sin avisos de seguridad. |
-| GitHub Actions — “Pruebas de Laravel” #46 | Aprobado para el commit `cde1819f43bbd7003ee43fdf2fc12cc09fe1a68a` del PR #21. |
-
-Los tiempos corresponden a las ejecuciones indicadas. Las pruebas responsive y la revisión visual de archivos exportados siguen siendo verificaciones manuales pendientes; no se declaran aprobadas sin ejecución real.
-
-## 10. Cierre de pruebas
-
-Antes de declarar lista la Release Candidate:
-
-- [x] Flujos críticos automatizados ejecutados.
-- [x] Ningún defecto P0 conocido pendiente.
-- [x] Pruebas positivas y negativas registradas.
-- [x] Permisos de los tres roles comprobados automáticamente.
-- [x] Reportes y exportaciones validados automáticamente.
-- [ ] Evidencias disponibles.
-- [x] GitHub Actions satisfactorio (workflow “Pruebas de Laravel” #46).
-- [ ] Historias relacionadas con Trello.
-
-Los responsables específicos serán asignados en la distribución oficial de Fase 3.
+Las pruebas automatizadas verifican respuestas HTTP, datos persistidos, autorización,
+archivos generados y estructura de las vistas. No se registran como aprobadas revisiones
+manuales de percepción visual, compatibilidad con dispositivos físicos ni observaciones
+académicas que no tengan evidencia disponible.

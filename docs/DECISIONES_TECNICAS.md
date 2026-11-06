@@ -1,239 +1,105 @@
-# Decisiones técnicas — Fase 2
+# Decisiones técnicas
 
-Este documento registra acuerdos y asuntos pendientes que afectan contratos compartidos.
-
-Una propuesta no debe implementarse como si ya estuviera aprobada.
+Este registro conserva las decisiones originadas en Fase 2 y consolidadas durante Fase
+3. Las referencias a contratos abiertos se describen como historia; no representan
+trabajo vigente sin implementar.
 
 ## DT-01 — Plantilla visual
 
-Estado: acordado.
-
-Usar AdminLTE 4 con Blade y Vite.
-
-Mantener un layout compartido y componentes reutilizables para formularios, tablas, navegación, mensajes y estados vacíos.
+AdminLTE 4 se integra con Blade y Vite. Los layouts, navegación, formularios, tablas,
+mensajes y estados vacíos reutilizan estilos compartidos.
 
 ## DT-02 — Paleta y tipografía
 
-Estado: confirmado en el Documento Maestro.
-
-Referencia visual: páginas 44 a 61.
-
-Paleta de la página 44:
-
-| Uso              | Valor     |
-| ---------------- | --------- |
-| Primario         | `#2563EB` |
-| Primario claro   | `#EFF6FF` |
-| Texto principal  | `#111827` |
-| Texto secundario | `#6B7280` |
-| Bordes           | `#D1D5DB` |
-| Fondo            | `#F8FAFC` |
-| Superficies      | `#FFFFFF` |
-
-Tipografía: Inter.
-
-Centralizar los estilos en `resources/css/adminlte.css`.
+La interfaz utiliza Inter y los tokens del Documento Maestro: primario `#2563EB`,
+primario claro `#EFF6FF`, texto `#111827`, texto secundario `#6B7280`, borde
+`#D1D5DB`, fondo `#F8FAFC` y superficie `#FFFFFF`.
 
 ## DT-03 — Usuarios, roles y suspensión
 
-Estado: resuelto por DT-12.
-
-El Diccionario referencia usuarios, pero no define completamente su tabla.
-
-Laravel incluye la tabla `users`.
-
-Decisión implementada:
-
-- Mantener `users`.
-- Agregar el campo `rol` con Enum para `admin`, `emprendedor` y `cliente`.
-- Agregar un campo de estado de cuenta.
-- Conectar `emprendimientos.usuario_id` con la tabla de usuarios adoptada.
-- Restringir a un emprendimiento por usuario.
-
-Responsables: integrantes 1, 2 y 3.
-
-El acuerdo debe reflejarse en migraciones, modelos, middleware, Policies, seeders y documentación.
+La aplicación conserva la tabla `users`, con roles `admin`, `emprendedor` y `cliente`
+mediante un backed Enum. `estado` bloquea cuentas suspendidas incluso con una sesión
+existente. `emprendimientos.usuario_id` limita a un negocio por usuario.
 
 ## DT-04 — Transiciones de pedidos
 
-Estado: resuelto por DT-12.
+La matriz implementada es:
 
-Estados presentes en el Diccionario:
+```text
+Pendiente -> Confirmado o Cancelado
+Confirmado -> En preparación o Cancelado
+En preparación -> Listo o Cancelado
+Listo -> Entregado o Cancelado
+```
 
-- Pendiente.
-- Confirmado.
-- En preparación.
-- Listo.
-- Entregado.
-- Cancelado.
+`Entregado` y `Cancelado` son terminales. Cada transición registra estado anterior,
+estado nuevo, actor y fecha.
 
-La matriz aprobada define:
+## DT-05 — Comisiones y cierre mensual
 
-- Qué transiciones están permitidas.
-- Desde qué estados puede cancelarse.
-- Si Entregado es un estado terminal.
-- Qué debe ocurrir ante un reintento del mismo cambio.
-- Qué información se registra en el historial.
-
-No asumir que todas las combinaciones son válidas.
-
-Responsables: integrantes 1 y 5.
-
-## DT-05 — Generación de comisiones y cierre mensual
-
-Estado: resuelto por DT-12.
-
-El Diccionario indica:
-
-- `comision_plataforma` se calcula al entregar.
-- La comisión se registra cuando el pedido pasa a Entregado.
-
-Reglas confirmadas para la implementación:
-
-- Generar una sola comisión por pedido.
-- Conservar monto base y porcentaje aplicado.
-- Conservar el resultado histórico.
-- Evitar recalcular una comisión pasada usando un porcentaje nuevo.
-
-Decisión aplicada:
-
-- Solo se cancela antes de Entregado.
-- Entregado es terminal y genera una comisión pendiente.
-- La comisión individual es un detalle contable del pedido, no una unidad de pago.
-- `EstadoCuenta` consolida la suma de las comisiones de un emprendimiento por mes.
-- El admin paga el período mensual completo una vez que está cerrado; no existen pagos parciales ni anulaciones.
-- El pago mensual es terminal y actualiza el estado de cuenta y todas sus comisiones en una sola transacción.
-
-No inventar ese comportamiento a partir del nombre de un estado.
-
-Responsables: integrantes 1, 2 y 5.
+Un pedido genera una sola comisión al pasar a `Entregado`. La comisión conserva monto
+base, porcentaje y total históricos. `EstadoCuenta` consolida las comisiones de un
+emprendimiento por mes; el administrador paga el período completo una vez cerrado. No
+existen pagos parciales, pagos por pedido, anulaciones ni reapertura de meses pagados.
 
 ## DT-06 — Datos del cliente
 
-Estado: resuelto por DT-12.
+El pedido pertenece al cliente autenticado y conserva snapshots de nombre, teléfono,
+correo, modalidad, dirección y notas. El catálogo es público, pero carrito, checkout y
+consulta de pedidos requieren una cuenta CLIENTE activa.
 
-El Diccionario establece:
+## DT-07 — Identificación e idempotencia
 
-- Nombre del cliente.
-- Teléfono del cliente.
-- Modalidad de entrega.
-- Dirección cuando corresponda.
+Los pedidos usan UUID y tokens para identificación e idempotencia. La referencia visible
+es `Pedido #ID`; cada consulta privada se protege con autenticación y Policies. Un
+carrito multi-negocio produce un pedido por emprendimiento en una sola transacción.
 
-Se conservan correo y notas como snapshots del pedido, según DT-12.
+## DT-08 — Restricciones de integridad
 
-Responsables: integrantes 2 y 5.
+MySQL garantiza negocio único por usuario, comisión única por pedido, identificadores
+únicos y combinaciones de checkout que evitan duplicados. Las claves foráneas y el
+borrado lógico preservan el historial.
 
-## DT-07 — Identificación pública y reintentos de pedidos
+## DT-09 — Reconstrucción de MySQL
 
-Estado: resuelto por DT-12.
-
-Los requerimientos exigen:
-
-- Identificador único de pedido.
-- Confirmación.
-- Consulta de estado.
-- Prevención de duplicados ante reenvíos.
-
-Contrato implementado:
-
-- Formato del identificador público.
-- Información que puede exponerse en la consulta pública.
-- Mecanismo para evitar enumeración de pedidos.
-- Campo o mecanismo de idempotencia.
-- Restricciones e índices necesarios.
-
-Responsables: integrantes 2, 3 y 5.
-
-## DT-08 — Restricciones adicionales
-
-Estado: resuelto por DT-12.
-
-Revisar restricciones para:
-
-- Unicidad de comisión por pedido.
-- Relación usuario-emprendimiento.
-- Suscripción activa aplicable.
-- Identificador público del pedido.
-- Prevención de solicitudes duplicadas.
-
-Las restricciones deben responder a reglas del proyecto y quedar documentadas.
-
-Responsables: integrantes 1 y 2, con el dueño de cada módulo.
-
-## DT-09 — Script SQL y recuperación
-
-Estado: acordado como entregable.
-
-El Integrante 2 entregará:
-
-- Script de creación o respaldo MySQL.
-- Datos de demostración sintéticos.
-- Instrucciones de importación.
-- Verificación de correspondencia con las migraciones.
-
-El respaldo no debe contener información personal real ni secretos.
+La propuesta histórica de entregar un dump fue sustituida por un mecanismo reproducible:
+las migraciones son la fuente oficial del esquema y los seeders contienen datos
+sintéticos. La RC no declara un respaldo SQL externo como evidencia validada.
 
 ## DT-10 — Indicadores y gráficos
 
-Estado: alcance visual acordado.
+Los indicadores consultan datos reales. Fase 3 incorporó Chart.js para pedidos por
+estado, ventas, productos y distribución de planes, con tablas equivalentes para
+lectura exacta y estados vacíos controlados.
 
-Preparar la estructura de AdminLTE durante Fase 2.
+## DT-11 — Trazabilidad de acuerdos
 
-Los indicadores funcionales deben consultar datos reales.
+Los cambios de contrato compartido se registran en documentación y se relacionan con
+el código, las pruebas y los Pull Requests que los materializan.
 
-Los gráficos, reportes y exportaciones se implementarán cuando estén priorizados y sus fuentes de datos estén disponibles.
+## DT-12 — Contratos funcionales consolidados
 
-## DT-11 — Registro de cambios
+El 16 de octubre de 2026 se aprobaron los contratos que cerraron las decisiones de
+usuarios, pedidos y comisiones:
 
-Cada nuevo acuerdo debe incluir:
+- el registro público crea clientes;
+- administración crea emprendedores, negocio y plan en una transacción;
+- el checkout autentica al cliente y conserva datos de contacto;
+- precios, subtotales, plan y porcentaje se calculan en servidor;
+- los snapshots históricos son obligatorios antes de entregar;
+- una transición inválida no crea historial ni comisión;
+- el reintento de checkout o comisión no duplica registros.
 
-- Identificador.
-- Tema.
-- Estado.
-- Decisión.
-- Motivo.
-- Responsables.
-- Archivos o módulos afectados.
-- Fecha de confirmación.
+## DT-13 — Exportaciones PDF y XLSX
 
-Mantener trazabilidad cuando una decisión cambie.
+El 29 de octubre de 2026 se incorporaron `barryvdh/laravel-dompdf` y
+`phpoffice/phpspreadsheet`. Pantalla y exportaciones reutilizan el mismo resultado del
+servicio de reportes. Las cadenas controladas por usuarios se escriben como texto en
+XLSX para evitar inyección de fórmulas. PHP `^8.4.1` y las extensiones de plataforma
+requeridas quedaron declaradas y verificadas en CI.
 
-## DT-12 — Contratos funcionales de la reconstrucción
+## Resultado de cierre
 
-Estado: aprobado para la implementación de la rama `feature/reconstruccion-funcional`.
-
-Decisión confirmada el 16 de octubre de 2026:
-
-- Mantener la tabla `users` y los roles `admin`, `emprendedor` y `cliente` mediante un backed Enum.
-- Usar `estado` para bloquear cuentas suspendidas, incluso cuando ya exista una sesión.
-- Permitir como máximo un emprendimiento por usuario emprendedor mediante la restricción única de `emprendimientos.usuario_id`.
-- El registro público crea solamente clientes; los emprendedores son creados por administración junto con su negocio y plan dentro de una transacción.
-- Asociar cada pedido al cliente autenticado y conservar snapshots de sus datos de contacto.
-- Un carrito con varios negocios produce un pedido por emprendimiento dentro de una sola transacción.
-- Aplicar la matriz `Pendiente -> Confirmado/Cancelado`, `Confirmado -> En preparación/Cancelado`, `En preparación -> Listo/Cancelado`, `Listo -> Entregado/Cancelado`; Entregado y Cancelado son terminales.
-- Generar una sola comisión al llegar a Entregado y recalcular su estado de cuenta mensual. Al ser Entregado terminal, no existe una anulación posterior de la comisión.
-- Exigir el snapshot de plan y porcentaje creado en checkout antes de entregar; nunca reconstruirlo con el plan actual.
-- Conservar en el pedido el plan, nombre y porcentaje aplicados para evitar recálculos retroactivos.
-- Mantener UUID y tokens para garantías técnicas e idempotencia; mostrar `Pedido #ID` como referencia visible y proteger cada consulta mediante autenticación y Policies.
-
-Motivo: estas reglas fueron autorizadas expresamente para completar el flujo de los cuatro actores y cerrar los contratos que figuraban como pendientes en DT-03 a DT-08.
-
-Módulos afectados: usuarios, autenticación, emprendimientos, carrito, pedidos, historial, comisiones, migraciones, middleware, Policies y seeders.
-
-## DT-13 — Exportaciones de reportes en PDF y Excel
-
-Estado: acordado para Fase 3 (`feature/fase3-reportes`).
-
-Decisión confirmada el 29 de octubre de 2026:
-
-- Incorporar `barryvdh/laravel-dompdf` (`^3.1`, licencia MIT sobre `dompdf/dompdf` LGPL-2.1) para la generación de reportes en PDF y `phpoffice/phpspreadsheet` (`^5.10`, licencia MIT) para la exportación tabular en formato XLSX.
-- Exigir y declarar explícitamente en el entorno local y en Integración Continua las extensiones PHP requeridas por ambas librerías: `gd`, `zip`, `dom`, `xml`, `xmlreader`, `xmlwriter`, `simplexml`, `libxml`, `iconv`, `zlib`, `ctype`, `filter` y `mbstring`.
-- Construir las exportaciones del emprendedor a partir del mismo resultado de `EntrepreneurReportService::report()` utilizado en pantalla, sin recalcular totales por separado ni incluir gráficos embebidos dentro de los archivos descargables.
-- Escribir explícitamente como texto (`DataType::TYPE_STRING`) cualquier cadena controlada por usuarios en celdas de Excel para impedir la inyección de fórmulas (`=`, `+`, `-`, `@`), conservando importes y cantidades como valores numéricos.
-- El requisito de plataforma se alineó en `composer.json` a PHP `^8.4.1`, mínimo efectivo del lockfile; CI y el entorno de cierre usan PHP 8.5.
-
-Motivo: cubrir las exportaciones PDF y Excel requeridas en Fase 3 (DWS-F3-06, INT-15) con paquetes compatibles con PHP 8.4/8.5, verificables automáticamente en PHPUnit y reutilizables sin duplicar consultas de negocio.
-
-Responsables: responsable de Base de Datos y Reportes del Emprendedor, en coordinación con mantenimiento de dependencias compartidas.
-
-Archivos o módulos afectados: `composer.json`, `composer.lock`, `.github/workflows/pruebas-laravel.yml`, `docs/INSTALACION_LOCAL.md`, `docs/RUTAS.md`, `app/Services/Reports/`, `app/Http/Controllers/Emprendedor/ReportController.php`, `routes/entrepreneur.php` y `resources/views/entrepreneur/reports/`.
+Los contratos fueron integrados mediante los PR #21 y #22. La Release Candidate
+`v1.0.0-rc.1` corresponde al commit
+`3ed062322a023e246546ed9a5b6e733fd3954042` y fue validada por GitHub Actions #50.

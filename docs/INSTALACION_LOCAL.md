@@ -1,24 +1,21 @@
 # Instalación local de EmprendeLink
 
-Guía reproducible para Windows con PowerShell. Los ejemplos asumen una instalación
-local de MySQL y una rama que ya contiene la Fase 3.
+Esta guía reproduce la Release Candidate `v1.0.0-rc.1` en Windows con PowerShell y una
+base MySQL local.
 
 ## 1. Requisitos
 
 | Herramienta | Requisito |
 | --- | --- |
-| PHP | `^8.4.1`; el proyecto fue verificado con PHP 8.5 y Laravel Herd |
+| PHP | `^8.4.1`; la RC fue validada con PHP 8.5 |
 | Composer | 2.x |
 | Laravel | 12, instalado por Composer |
 | MySQL | 8.x |
-| Node.js y npm | Versiones compatibles con el `package-lock.json` |
+| Node.js y npm | Versiones compatibles con `package-lock.json` |
 | Git | Versión estable |
 
-PHP necesita las extensiones habituales de Laravel y, como mínimo para este proyecto,
-`pdo_mysql`, `mbstring`, `openssl`, `ctype`, `fileinfo`, `xml`, `dom`, `gd`, `zip`,
-`iconv`, `libxml`, `SimpleXML`, `XMLReader`, `XMLWriter` y `zlib`.
-
-Compruebe el entorno antes de instalar:
+PHP requiere `pdo_mysql`, `mbstring`, `openssl`, `ctype`, `fileinfo`, `xml`, `dom`,
+`gd`, `zip`, `iconv`, `libxml`, `SimpleXML`, `XMLReader`, `XMLWriter` y `zlib`.
 
 ```powershell
 php -v
@@ -29,28 +26,38 @@ npm -v
 git --version
 ```
 
-Con Laravel Herd, confirme que la terminal usa su PHP y que GD está disponible:
+## 2. Obtener exactamente la RC
+
+Una copia nueva puede obtenerse directamente desde el tag:
 
 ```powershell
-php -r "echo PHP_VERSION, PHP_EOL; var_export(extension_loaded('gd'));"
+git clone --branch v1.0.0-rc.1 --depth 1 https://github.com/Notchez/dws-emprendelink.git
+Set-Location dws-emprendelink
+git describe --tags --exact-match
+```
+
+El último comando debe mostrar `v1.0.0-rc.1`. En una copia existente:
+
+```powershell
+git fetch origin --tags
+git switch --detach v1.0.0-rc.1
+```
+
+El modo detached conserva el tag inmutable. Para desarrollar cambios se crea una rama
+nueva desde la referencia autorizada; no se mueve el tag.
+
+## 3. Instalar dependencias
+
+```powershell
+composer install
+npm ci
 composer check-platform-reqs
 ```
 
-## 2. Obtener el proyecto e instalar dependencias
+Estos comandos respetan `composer.lock` y `package-lock.json`. La instalación normal no
+usa `composer update` ni `npm audit fix --force`.
 
-```powershell
-git clone https://github.com/Notchez/dws-emprendelink.git
-Set-Location dws-emprendelink
-git switch develop
-composer install
-npm ci
-```
-
-`composer install` y `npm ci` respetan exactamente `composer.lock` y
-`package-lock.json`. No use `composer update` ni `npm audit fix --force` como parte de
-la instalación normal.
-
-## 3. Configurar `.env`
+## 4. Configurar el entorno
 
 ```powershell
 if (-not (Test-Path -LiteralPath '.env')) {
@@ -59,7 +66,7 @@ if (-not (Test-Path -LiteralPath '.env')) {
 }
 ```
 
-Configure una base de desarrollo exclusivamente local:
+Configure una base exclusivamente local:
 
 ```dotenv
 APP_NAME=EmprendeLink
@@ -81,12 +88,9 @@ FILESYSTEM_DISK=local
 MAIL_MAILER=log
 ```
 
-No copie credenciales reales al repositorio. `.env`, `.env.production` y respaldos del
-entorno están excluidos por `.gitignore`.
+`.env` y las credenciales permanecen fuera de Git.
 
-## 4. Crear las bases MySQL
-
-Ejecute en MySQL Workbench o en el cliente MySQL:
+## 5. Crear las bases MySQL
 
 ```sql
 CREATE DATABASE IF NOT EXISTS dws_emprendelink
@@ -98,18 +102,15 @@ CHARACTER SET utf8mb4
 COLLATE utf8mb4_unicode_ci;
 ```
 
-La primera es para uso manual. La segunda es exclusiva para PHPUnit. El usuario local
-de MySQL debe tener permisos sobre ambas.
-
-Confirme el entorno y la conexión antes de escribir datos:
+La primera base es para uso manual. La segunda es exclusiva para PHPUnit.
 
 ```powershell
-php artisan env
 php artisan config:clear
+php artisan env
 php artisan migrate:status
 ```
 
-## 5. Migraciones y datos iniciales
+## 6. Migraciones y datos base
 
 En una instalación nueva y vacía:
 
@@ -118,117 +119,83 @@ php artisan migrate
 php artisan db:seed
 ```
 
-`DatabaseSeeder` crea los planes, las tres cuentas base, Manos Creativas y un pedido
-mínimo. No ejecuta el showcase automáticamente.
-
-Para cargar el escenario completo de Fase 3:
+`DatabaseSeeder` crea planes, cuentas base, Manos Creativas y un pedido mínimo. El
+escenario ampliado se ejecuta por separado:
 
 ```powershell
 php artisan db:seed --class="Database\Seeders\DemoShowcaseSeeder"
 ```
 
-`DemoShowcaseSeeder`:
+`DemoShowcaseSeeder` solo admite `local` y `testing`, conserva registros existentes y
+es idempotente. Genera 20 pedidos históricos y 22 SVG. Una segunda ejecución no
+duplica pedidos ni comisiones.
 
-- solo funciona con `APP_ENV=local` o `testing`;
-- es determinista e idempotente;
-- conserva los registros existentes;
-- genera 20 pedidos entre julio y el 6 de noviembre de 2026;
-- genera comisiones con los servicios reales del dominio;
-- crea 22 SVG locales en `storage/app/public/demo-showcase`.
-
-Puede ejecutarlo una segunda vez para comprobar la idempotencia: los pedidos y las
-comisiones no deben aumentar. Consulte [DEMO_SHOWCASE.md](DEMO_SHOWCASE.md) para el
-detalle del conjunto.
-
-## 6. Almacenamiento público y SVG
+## 7. Almacenamiento y frontend
 
 ```powershell
 php artisan storage:link
+npm run build
 ```
 
-El enlace `public/storage` permite servir logos y productos guardados en el disco
-`public`. Después de ejecutar el showcase en una instalación nueva, compruebe:
+Después de ejecutar el showcase, los SVG se encuentran en
+`storage/app/public/demo-showcase` y se sirven mediante `public/storage`:
 
 ```powershell
 (Get-ChildItem -LiteralPath 'storage\app\public\demo-showcase' -Recurse -File -Filter '*.svg').Count
 Test-Path -LiteralPath 'public\storage\demo-showcase'
 ```
 
-El resultado esperado es `22` y `True`. Los SVG se regeneran desde
-`DemoShowcaseSeeder.php`; no es necesario versionar los archivos generados.
+Los resultados esperados son `22` y `True`.
 
-## 7. Compilar e iniciar en Windows
+## 8. Iniciar la aplicación
 
 ```powershell
-npm run build
 php artisan serve --no-reload
 ```
 
-Abra `http://127.0.0.1:8000`. En Windows se usa `--no-reload` para evitar que el
-servidor de desarrollo reinicie procesos repetidamente al detectar archivos generados.
+La aplicación queda disponible en `http://127.0.0.1:8000`. Para desarrollo de recursos
+se ejecuta `npm run dev` en otra terminal. Ambos procesos se detienen con `Ctrl+C`.
 
-Para trabajar con recarga de CSS y JavaScript, ejecute en otra terminal:
+## 9. Cuentas locales
 
-```powershell
-npm run dev
-```
+Las cuentas base usan la contraseña `password`:
 
-Mantenga también `php artisan serve --no-reload` activo. Detenga ambos procesos con
-`Ctrl+C`.
+| Rol | Correo |
+| --- | --- |
+| Administrador | `admin@emprendelink.test` |
+| Emprendedor | `emprendedor@emprendelink.test` |
+| Cliente | `cliente@emprendelink.test` |
 
-## 8. Cuentas de demostración
+Las cuentas adicionales están en [DEMO_SHOWCASE.md](DEMO_SHOWCASE.md). Estas
+credenciales son públicas y se usan únicamente en entornos locales de demostración.
 
-Todas usan la contraseña `password` y son únicamente para el entorno local.
+## 10. Pruebas y protección de datos
 
-| Rol | Correo | Seeder |
-| --- | --- | --- |
-| Administrador | `admin@emprendelink.test` | Base |
-| Emprendedor | `emprendedor@emprendelink.test` | Base |
-| Cliente | `cliente@emprendelink.test` | Base |
-| Emprendedor | `miguel.portillo@emprendelink.test` | Showcase |
-| Emprendedor | `rosa.aguilar@emprendelink.test` | Showcase |
-| Emprendedor | `diego.morales@emprendelink.test` | Showcase |
-| Cliente | `ana.martinez@emprendelink.test` | Showcase |
-| Cliente | `carlos.hernandez@emprendelink.test` | Showcase |
-| Cliente | `sofia.ramirez@emprendelink.test` | Showcase |
-
-## 9. Pruebas y protección de bases
-
-`phpunit.xml` configura `dws_emprendelink_test`. Además, `Tests\TestCase` rechaza
-cualquier nombre que no termine en `_test` o `_testing`.
+`phpunit.xml` configura `dws_emprendelink_test`; `Tests\TestCase` rechaza cualquier
+nombre que no termine en `_test` o `_testing`.
 
 ```powershell
 php artisan test
 ```
 
-Antes de ejecutar pruebas, verifique que ninguna variable de entorno del sistema
-sobrescriba `DB_DATABASE`. Nunca use la base de desarrollo o producción para PHPUnit.
+No se usa la base de desarrollo o producción para PHPUnit. Tampoco se ejecutan
+`migrate:fresh`, `migrate:refresh` o `db:wipe` sobre bases con información que deba
+conservarse. El showcase está prohibido en producción.
 
-No ejecute estos comandos sobre bases con información que deba conservarse:
+## 11. Errores comunes
 
-```text
-php artisan migrate:fresh
-php artisan db:wipe
-php artisan migrate:refresh
-```
+### Extensiones PHP ausentes
 
-El showcase también está prohibido en producción y contiene credenciales públicas de
-demostración.
-
-## 10. Errores comunes
-
-### `ext-gd` o `ext-zip` no disponible
-
-Compruebe qué PHP usa Composer con `php --ini` y `php -m`. Active la extensión en ese
-`php.ini` o seleccione una versión de Herd que la incluya; cierre y abra la terminal y
-repita `composer check-platform-reqs`.
+`php --ini` identifica el archivo cargado y `php -m` lista extensiones. Después de
+activar `gd`, `zip` u otra extensión, se abre una terminal nueva y se ejecuta
+`composer check-platform-reqs`.
 
 ### MySQL rechaza la conexión
 
-Confirme que el servicio está iniciado, que `DB_HOST=127.0.0.1`, que la base existe y
-que el usuario tiene permisos. Después ejecute `php artisan config:clear`.
+Confirme que MySQL esté activo, que `DB_HOST=127.0.0.1`, que la base exista y que el
+usuario tenga permisos. Luego ejecute `php artisan config:clear`.
 
-### `No application encryption key has been specified`
+### Falta la clave de aplicación
 
 ```powershell
 php artisan key:generate
@@ -237,34 +204,24 @@ php artisan config:clear
 
 ### Las imágenes devuelven 404
 
-```powershell
-php artisan storage:link
-php artisan config:clear
-```
-
-Compruebe que el archivo exista bajo `storage/app/public` y que `public/storage` sea un
-enlace válido. Si el enlace ya existe y apunta al destino correcto, no necesita crearlo
-de nuevo.
+Ejecute `php artisan storage:link` y compruebe que `public/storage` apunte a
+`storage/app/public`.
 
 ### Vite o esbuild no compila
 
-No reutilice un `node_modules` de otra versión de Node. Ejecute `npm ci` y luego
-`npm run build`. El permiso de `esbuild` está registrado en `package.json`.
+Elimine únicamente un `node_modules` local incompatible mediante el procedimiento de su
+sistema, ejecute `npm ci` y repita `npm run build`. El permiso de esbuild está declarado
+en `package.json`.
 
-### El servidor Laravel se reinicia continuamente en Windows
+### El servidor se reinicia en Windows
 
-Inícielo con:
+Use `php artisan serve --no-reload`.
 
-```powershell
-php artisan serve --no-reload
-```
+### El showcase no encuentra datos base
 
-### El seeder no encuentra planes o Manos Creativas
+Ejecute primero `php artisan db:seed`; el showcase no reconstruye los seeders base.
 
-Ejecute primero `php artisan db:seed`. El showcase se mantiene separado
-intencionalmente y no reconstruye los datos base.
-
-## 11. Validación de una instalación
+## 12. Validación técnica
 
 ```powershell
 composer validate --strict
@@ -276,6 +233,3 @@ npm run build
 npm audit
 git diff --check
 ```
-
-Las pruebas destructivas operan únicamente sobre `dws_emprendelink_test`. Los seeders
-de demostración se ejecutan manualmente solo en la base local de desarrollo.

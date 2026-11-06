@@ -1,160 +1,90 @@
 # Instrucciones para asistentes de código
 
-Este archivo define las convenciones compartidas del repositorio EmprendeLink.
+## Contexto vigente
 
-Debe leerse antes de generar o modificar código.
+EmprendeLink es una aplicación Laravel 12 integrada como Release Candidate
+`v1.0.0-rc.1`. Usa PHP `^8.4.1`, MySQL 8, Blade, AdminLTE 4, Bootstrap, Chart.js y
+Vite. La RC corresponde al commit `3ed062322a023e246546ed9a5b6e733fd3954042`.
 
-## Contexto del proyecto
+El catálogo es público. El carrito, checkout y seguimiento de pedidos requieren una
+cuenta activa con rol CLIENTE.
 
-- Asignatura: DWS901.
-- Proyecto: EmprendeLink.
-- Fase: Integración Full Stack y Release Candidate, Sprint III.
-- Tecnologías: PHP 8.5, Laravel 12, MySQL 8, Blade, AdminLTE 4 y Vite.
-- El catálogo es público. El carrito, checkout y seguimiento de pedidos requieren una cuenta activa con rol cliente.
+Antes de modificar código, consultar `README.md`, `docs/ARQUITECTURA.md`,
+`docs/MODELO_NEGOCIO.md`, `docs/DECISIONES_TECNICAS.md` y
+`docs/ROLES_PERMISOS.md`. Los documentos identificados como Fase 2 son históricos; la
+implementación y la documentación vigente prevalecen cuando describen un contrato más
+reciente.
 
-## Documentos de referencia
-
-1. Documento Maestro aprobado.
-2. Ruta de Aprendizaje de DWS.
-3. `docs/FASE_3_PLAN.md`.
-4. `docs/ARQUITECTURA.md`.
-5. `docs/DECISIONES_TECNICAS.md`.
-6. `docs/ROLES_PERMISOS.md`.
-
-Si existe una contradicción:
-
-- Identificarla.
-- Explicar qué comportamiento afecta.
-- Solicitar la decisión necesaria al responsable.
-- Registrar el acuerdo antes de modificar contratos compartidos.
-
-Los cambios de alcance autorizados expresamente por el responsable deben reflejarse en la documentación.
-
-## Alcance de Fase 3
-
-Priorizar:
-
-- Integración completa de los módulos existentes.
-- Reportes del emprendedor y reportes administrativos.
-- Gráficos y exportaciones PDF/XLSX.
-- Corrección de defectos de integración, seguridad y accesibilidad.
-- Pruebas automatizadas y evidencia real de verificación.
-
-AdminLTE 4 es la plantilla visual acordada.
-
-No incorporar pagos en línea, facturación fiscal, chat u otras funcionalidades excluidas del alcance.
-
-Mantener las exclusiones del Documento Maestro.
-
-## Arquitectura obligatoria
+## Arquitectura
 
 - Las rutas declaran endpoints y middleware.
 - Los controladores coordinan solicitudes y respuestas.
-- Los Form Requests validan entradas.
-- Los servicios implementan operaciones y reglas de negocio.
-- Los modelos representan entidades, relaciones, casts y consultas reutilizables.
-- Las Policies autorizan operaciones sobre recursos.
-- Las vistas Blade presentan información.
+- Los Form Requests validan y autorizan entradas.
+- Las Policies y consultas restringidas protegen propiedad y rol.
+- Los servicios concentran reglas, cálculos y transacciones.
+- Los modelos representan relaciones, casts y consultas Eloquent.
+- Las vistas Blade presentan datos ya autorizados.
 
-No duplicar reglas de negocio entre controladores, vistas y JavaScript.
+No duplicar reglas de negocio entre controladores, vistas y JavaScript. Buscar una
+implementación existente antes de crear otra clase o contrato.
 
-## Nombres y contratos
+## Contratos funcionales
 
-- Respetar las clases y ubicaciones de `docs/ARQUITECTURA_FASE_2.md`.
-- Buscar implementaciones existentes antes de crear otra clase.
-- No renombrar rutas, campos, tablas o servicios compartidos sin registrar la decisión.
-- Conservar exactamente los nombres de tablas del Diccionario de Datos.
-- Declarar `$table` cuando el nombre de una tabla no coincida con la convención de Eloquent.
-- Usar PascalCase para clases PHP y snake_case para tablas y columnas.
+- Roles: `admin`, `emprendedor` y `cliente`.
+- Un usuario emprendedor posee como máximo un emprendimiento.
+- El registro público crea clientes; administración crea emprendedores con negocio y
+  plan dentro de una transacción.
+- Un carrito multi-negocio genera un pedido por emprendimiento en una sola transacción.
+- Los precios, subtotales, plan y porcentaje de comisión se determinan en servidor.
+- El checkout es idempotente y conserva snapshots históricos.
+- Las transiciones son `Pendiente -> Confirmado/Cancelado`,
+  `Confirmado -> En preparación/Cancelado`, `En preparación -> Listo/Cancelado` y
+  `Listo -> Entregado/Cancelado`.
+- `Entregado` y `Cancelado` son terminales.
+- Un pedido entregado genera una sola comisión. Los pagos se realizan por estado de
+  cuenta mensual cerrado, nunca por comisión individual.
+- Productos y categorías usan eliminación lógica cuando corresponde; el historial de
+  pedidos conserva productos eliminados.
 
-## Seguridad y propiedad de datos
+## Seguridad y datos
 
-- Proteger rutas privadas con autenticación y autorización.
-- Verificar el rol en el servidor.
-- Restringir consultas y modificaciones al emprendimiento autorizado.
-- No confiar en un `emprendimiento_id` enviado por el navegador.
-- Usar Policies y consultas restringidas por propietario.
-- Mantener protección CSRF.
-- Validar las entradas antes de procesarlas.
-- Utilizar el hashing de Laravel para contraseñas.
-- No crear accesos alternativos que omitan controles de seguridad.
+- Mantener autenticación, middleware de cuenta activa, roles, Policies y CSRF.
+- No confiar en identificadores de propiedad enviados por el navegador.
+- Validar entradas antes de procesarlas y usar hashing de Laravel.
+- Usar transacciones y bloqueos para escrituras relacionadas.
+- No registrar secretos ni datos personales en logs, fixtures o documentación.
+- No versionar `.env`, tokens, credenciales reales, `vendor`, `node_modules`,
+  compilados ni archivos generados.
+- Ejecutar pruebas solo sobre una base MySQL cuyo nombre termine en `_test` o
+  `_testing`.
+- No ejecutar `migrate:fresh`, `migrate:refresh` ni `db:wipe` sobre bases con datos que
+  deban conservarse.
 
-## Persistencia
+## Dependencias e interfaz
 
-- Utilizar MySQL para verificar el comportamiento definitivo del proyecto.
-- Usar transacciones cuando una operación escriba varias tablas relacionadas.
-- Registrar pedido y detalles como una sola operación atómica.
-- Mantener la integridad de pedidos, historial y comisiones.
-- Evitar pedidos y comisiones duplicados ante reintentos.
-- Conservar los precios del pedido y el porcentaje aplicado a la comisión.
-- Aplicar SoftDeletes únicamente en las entidades que lo requieran.
-- Evitar borrado físico de información necesaria para el historial.
-
-## Dependencias y configuración
-
-- No subir `.env`, secretos, tokens ni credenciales reales.
-- Mantener `.env.example` con valores de ejemplo.
-- Gestionar dependencias PHP mediante Composer.
-- Actualizar `composer.lock` cuando se modifiquen dependencias PHP.
-- Mantener `package-lock.json` sincronizado con `package.json`.
-- Centralizar AdminLTE, Bootstrap y recursos compartidos mediante Vite.
-- Evitar incorporar otra plantilla o framework frontend sin autorización.
-
-## Interfaz
-
-- Usar el layout y los componentes compartidos.
-- Respetar la paleta y tipografía del Documento Maestro, página 44.
-- Usar mensajes claros de éxito y error.
-- Asociar etiquetas con campos.
-- Mostrar errores cerca del campo correspondiente.
-- Mantener contraste, foco visible y navegación por teclado.
-- Utilizar datos reales en indicadores funcionales.
-- Identificar claramente cualquier vista temporal de preparación.
+- Gestionar PHP con Composer y frontend con npm; mantener ambos lockfiles sincronizados.
+- Centralizar AdminLTE, Bootstrap, estilos y JavaScript compartidos mediante Vite.
+- Mantener la paleta, tipografía, contraste, foco visible y navegación por teclado.
+- No incorporar otro framework visual sin autorización.
+- Los indicadores y reportes usan datos reales de MySQL.
 
 ## Flujo Git
 
-- No trabajar directamente en `main`.
-- No trabajar directamente en `develop`.
-- Crear ramas temporales desde `develop` actualizado.
-- Preparar Pull Requests hacia `develop`.
+- No trabajar directamente en `main` ni `develop`.
+- Crear ramas desde `develop` actualizado y preparar Pull Requests hacia `develop`.
 - Usar Conventional Commits con descripción en español.
-- Publicar o integrar cambios únicamente cuando el integrante lo autorice.
+- No publicar, fusionar, etiquetar ni eliminar ramas sin autorización explícita.
+- Preservar cambios locales ajenos.
 
 ## Protocolo de trabajo
 
-1. Inspeccionar el estado Git y los archivos relacionados.
-2. Identificar los RF, RNF y criterios de aceptación afectados.
-3. Revisar las decisiones pendientes.
-4. Explicar brevemente qué se implementará.
-5. Realizar cambios dentro del módulo asignado.
-6. Añadir pruebas relevantes para comportamientos críticos.
-7. Ejecutar las verificaciones disponibles.
-8. Informar resultados y limitaciones reales.
+1. Inspeccionar Git y los archivos relacionados.
+2. Confirmar los contratos vigentes y el alcance autorizado.
+3. Realizar cambios pequeños dentro del módulo afectado.
+4. Añadir pruebas para comportamientos críticos cuando cambie lógica.
+5. Ejecutar verificaciones proporcionales al riesgo.
+6. Informar archivos, resultados reales, limitaciones y pasos manuales necesarios.
 
-Nunca declarar que una prueba pasó si no fue ejecutada.
-
-## Entrega del asistente
-
-Al finalizar, informar:
-
-- Archivos modificados.
-- Requerimientos cubiertos.
-- Pruebas y comandos ejecutados.
-- Resultado de cada verificación.
-- Decisiones pendientes.
-- Pasos manuales necesarios.
-- Mensaje de commit sugerido.
-
-## Decisiones que requieren atención
-
-El Diccionario de Datos detalla las tablas del negocio, pero no define completamente la tabla de usuarios.
-
-Antes de fijar las migraciones definitivas deben acordarse:
-
-- Campos de rol y estado de cuenta.
-- Correspondencia entre `users` y las referencias a `usuarios`.
-- Restricción de la relación usuario-emprendimiento.
-- Matriz de transiciones de pedidos.
-- Tratamiento de comisiones ante cancelaciones.
-
-No inventar esas reglas ni presentarlas como decisiones aprobadas.
+Nunca declarar que una prueba pasó si no fue ejecutada. Una limitación material debe
+explicarse de forma descriptiva; no debe ocultarse ni presentarse como resultado
+aprobado.
