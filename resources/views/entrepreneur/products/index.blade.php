@@ -15,14 +15,14 @@
 @section('content')
     @include('components.flash')
 
-    <div class="row g-4">
+    <div class="row g-3 entrepreneur-products-grid">
         @forelse($productos as $producto)
-            <div class="col-12 col-sm-6 col-xl-4">
-                <article class="card product-card h-100">
+            <div class="col-12 col-sm-6 col-lg-4 col-xxl-3">
+                <article class="card product-card entrepreneur-product-card h-100">
                     @if($producto->imagen_url)
-                        <img class="admin-product-image" src="{{ asset('storage/'.$producto->imagen_url) }}" alt="{{ $producto->nombre }}">
+                        <img class="admin-product-image entrepreneur-product-image" src="{{ asset('storage/'.$producto->imagen_url) }}" alt="{{ $producto->nombre }}">
                     @else
-                        <div class="product-placeholder"><i class="bi bi-image" aria-hidden="true"></i></div>
+                        <div class="product-placeholder entrepreneur-product-placeholder"><i class="bi bi-image" aria-hidden="true"></i></div>
                     @endif
 
                     <div class="card-body d-flex flex-column">
@@ -32,10 +32,10 @@
                                 {{ $producto->estado ? 'Activo' : 'Inactivo' }}
                             </span>
                         </div>
-                        <h2 class="h5 fw-bold">{{ $producto->nombre }}</h2>
-                        <p class="price mb-4">${{ number_format($producto->precio, 2) }}</p>
+                        <h2 class="h5 fw-bold mb-1">{{ $producto->nombre }}</h2>
+                        <p class="price mb-3">${{ number_format($producto->precio, 2) }}</p>
 
-                        <div class="d-flex flex-wrap gap-2 mt-auto">
+                        <div class="d-flex flex-wrap gap-2 mt-auto entrepreneur-product-actions">
                             <a class="btn btn-outline-primary flex-grow-1" href="{{ route('entrepreneur.products.edit', $producto) }}">
                                 <i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar
                             </a>

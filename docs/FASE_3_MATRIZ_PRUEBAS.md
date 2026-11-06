@@ -144,12 +144,13 @@ Entorno local del 6 de noviembre de 2026: PHP 8.5.12 con GD, Laravel 12 y MySQL 
 | `EntrepreneurReportTest` después de incorporar el filtro | 42 pruebas aprobadas, 414 aserciones, 6.10 s. |
 | `AdminReportTest` | 6 pruebas aprobadas, 58 aserciones, 2.29 s. |
 | `CatalogProfileOwnershipTest` + `EntrepreneurReportStatusFilterTest` | 10 pruebas aprobadas, 58 aserciones, 2.13 s. |
-| Verificación final: `php artisan test` | 107 pruebas aprobadas, 731 aserciones, 9.66 s. |
+| Verificación final: `php artisan test` | 109 pruebas aprobadas, 910 aserciones. |
 | Verificación final: `npm run build` | 123 módulos transformados; compilación Vite 6.4.5 aprobada en 747 ms. |
 | `npm audit` después de actualizar dependencias | 0 vulnerabilidades. |
 | `composer audit` después de actualizar dependencias | Sin avisos de seguridad. |
+| GitHub Actions — “Pruebas de Laravel” #46 | Aprobado para el commit `cde1819f43bbd7003ee43fdf2fc12cc09fe1a68a` del PR #21. |
 
-Los tiempos corresponden a las ejecuciones indicadas. Las pruebas responsive, la revisión visual de archivos exportados y la ejecución de GitHub Actions siguen siendo verificaciones manuales/externas pendientes.
+Los tiempos corresponden a las ejecuciones indicadas. Las pruebas responsive y la revisión visual de archivos exportados siguen siendo verificaciones manuales pendientes; no se declaran aprobadas sin ejecución real.
 
 ## 10. Cierre de pruebas
 
@@ -161,7 +162,7 @@ Antes de declarar lista la Release Candidate:
 - [x] Permisos de los tres roles comprobados automáticamente.
 - [x] Reportes y exportaciones validados automáticamente.
 - [ ] Evidencias disponibles.
-- [ ] GitHub Actions satisfactorio.
+- [x] GitHub Actions satisfactorio (workflow “Pruebas de Laravel” #46).
 - [ ] Historias relacionadas con Trello.
 
 Los responsables específicos serán asignados en la distribución oficial de Fase 3.

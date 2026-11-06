@@ -82,7 +82,7 @@
         </p>
     </form>
 
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-4 entrepreneur-report-metrics">
         <div class="col-12 col-sm-6 col-xl-3">
             <div class="card metric-card h-100">
                 <div class="card-body d-flex gap-3">
@@ -146,9 +146,9 @@
         </div>
     @endif
 
-    <div class="row g-4 orders-surface" data-report-sections>
+    <div class="row g-3 orders-surface align-items-start entrepreneur-report-grid" data-report-sections>
         <div class="col-12 col-lg-5">
-            <div class="card h-100">
+            <div class="card">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <h2 class="h5 mb-0">Pedidos por estado</h2>
                     <span class="badge badge-soft">Total: {{ $report['totalPedidos'] }}</span>
@@ -157,7 +157,7 @@
                     <p class="empty-state border-bottom mb-0">No hay pedidos en el período seleccionado.</p>
                 @else
                     <div class="card-body border-bottom">
-                        <div class="ratio ratio-4x3">
+                        <div class="entrepreneur-report-chart entrepreneur-report-chart--status">
                             <canvas
                                 role="img"
                                 aria-label="Gráfico circular de pedidos por estado. Los valores exactos están en la tabla siguiente."
@@ -192,14 +192,14 @@
         </div>
 
         <div class="col-12 col-lg-7">
-            <div class="card h-100">
+            <div class="card">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <h2 class="h5 mb-0">Productos más vendidos</h2>
                     <span class="text-body-secondary small">Top {{ \App\Services\Reports\EntrepreneurReportService::TOP_PRODUCTS_LIMIT }}</span>
                 </div>
                 @if(! $charts['topProductos']['vacio'])
                     <div class="card-body border-bottom">
-                        <div class="ratio ratio-4x3">
+                        <div class="entrepreneur-report-chart entrepreneur-report-chart--products">
                             <canvas
                                 role="img"
                                 aria-label="Gráfico de barras horizontales con el ranking de productos más vendidos. Los valores exactos están en la tabla siguiente."
@@ -253,7 +253,7 @@
                 </div>
                 @if(! $charts['ventasPorPeriodo']['vacio'])
                     <div class="card-body border-bottom">
-                        <div class="ratio ratio-21x9" style="min-height: 14rem;">
+                        <div class="entrepreneur-report-chart entrepreneur-report-chart--sales">
                             <canvas
                                 role="img"
                                 aria-label="Gráfico de barras de evolución de ventas entregadas por período. Los valores exactos están en la tabla siguiente."
